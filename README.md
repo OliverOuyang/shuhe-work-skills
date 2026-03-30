@@ -4,7 +4,7 @@
 
 **目标用户**: 数禾数据分析师、企业级数据平台用户（观远、Dataphin）、需要自动化数据分析和报告生成的团队成员
 
-**版本**: v1.1.0 | **Skills 总数**: 31 个（1 数禾定制 + 30 oh-my-claudecode）
+**版本**: v1.3.0 | **Skills 总数**: 33 个（3 数禾定制 + 30 oh-my-claudecode）
 
 ---
 
@@ -54,8 +54,10 @@ claude
 | Skill 名称 | 功能描述 | 使用场景 | 命令 |
 |-----------|---------|---------|------|
 | **guanyuan-data-fetcher** | 自动化观远数据平台查询和报告生成 | • 定期数据报告生成<br>• 卡片数据批量导出<br>• Excel 报告自动化 | `/guanyuan-data-fetcher` |
+| **guanyuan-monitor** | 自动化数据监控系统，基于规则告警 | • 指标异常监��<br>• 告警阈值设置<br>• 钉钉自动通知 | `/guanyuan-monitor` |
+| **rta-exclude-strategy** | RTA排除策略自动分析工具 - 基于V8/V9RN二维交叉分析 | • 广告投放排除策略制定<br>• 模型分组交叉分析<br>• 自动生成Excel分析报告 | `/rta-exclude-strategy` |
 
-**依赖**: 需要配置观远 API 权限（MCP: `guanyuan-api`）
+**依赖**: 需要配置观远 API 权限（MCP: `guanyuan-data`）和钉钉通知（MCP: `messagengine-dingtalk`）
 
 ---
 
@@ -153,6 +155,12 @@ claude
 ```bash
 # 查询观远数据并生成 Excel 报告
 /guanyuan-data-fetcher --card-id 12345 --date-range "2024-01-01,2024-01-31"
+
+# 启动观远数据监控（基于 JSON 配置文件）
+/guanyuan-monitor --config configs/my_monitor.json
+
+# RTA 排除策略分析
+/rta-exclude-strategy --data_path data.csv --ctrl_group 0
 
 # 未来：Dataphin 表检索
 /dataphin-analyzer "用户行为表"
@@ -293,7 +301,7 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 🔖 版本信息
 
-- **当前版本**: v1.1.0
+- **当前版本**: v1.3.0
 - **发布日期**: 2026-03-30
 - **oh-my-claudecode 版本**: v4.9.3
 - **最后更新**: 2026-03-30

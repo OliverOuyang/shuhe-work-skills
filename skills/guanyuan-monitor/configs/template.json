@@ -1,0 +1,48 @@
+{
+  "name": "示例监控任务",
+  "description": "监控核心指标的日常变化",
+
+  "schedule": "every 1 hours",
+
+  "monitors": [
+    {
+      "name": "GMV监控",
+      "card_id": "xxx",
+      "metric_field": "gmv_amount",
+      "filters": [
+        {
+          "filterType": "common",
+          "filterInfo": {
+            "name": "日期",
+            "fdId": "date_field",
+            "conditionType": "EQ",
+            "filterValues": ["今天"]
+          }
+        }
+      ],
+      "rules": [
+        {
+          "type": "threshold",
+          "operator": "lt",
+          "threshold": 1000000,
+          "alert_level": "warning",
+          "message": "GMV低于100万"
+        },
+        {
+          "type": "change_rate",
+          "compare_with": "yesterday",
+          "operator": "lt",
+          "threshold": -0.1,
+          "alert_level": "critical",
+          "message": "GMV环比下降超过10%"
+        }
+      ]
+    }
+  ],
+
+  "notification": {
+    "template_code": "DING_DEFAULT_XXX",
+    "biz_type": "common",
+    "recipients": ["user_id_1", "user_id_2"]
+  }
+}

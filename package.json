@@ -1,6 +1,6 @@
 {
   "name": "shuhe-work-skills",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "description": "数禾工作场景Skills集合 + oh-my-claudecode 完整工具链",
   "author": "数禾DS团队",
   "license": "MIT",
@@ -28,6 +28,45 @@
         "tags": ["data", "guanyuan", "reporting", "excel", "automation"],
         "requiresAuth": true,
         "authType": "guanyuan_api"
+      },
+      {
+        "name": "guanyuan-monitor",
+        "version": "1.0.0",
+        "description": "自动化观远数据监控系统 - 支持基于规则的告警判断、钉钉通知、定时任务调度",
+        "docPath": "skills/guanyuan-monitor/SKILL.md",
+        "command": "/guanyuan-monitor",
+        "dependencies": {
+          "mcp": ["guanyuan-data", "messagengine-dingtalk"],
+          "python": [
+            "schedule>=1.1.0",
+            "pyyaml>=6.0"
+          ]
+        },
+        "tags": ["monitoring", "guanyuan", "alerts", "automation", "dingtalk"],
+        "requiresAuth": true,
+        "authType": "guanyuan_api"
+      },
+      {
+        "name": "rta-exclude-strategy",
+        "version": "1.0.0",
+        "description": "RTA排除策略自动分析工具 - 基于V8和V9RN模型的二维交叉分析，自动生成排除策略Excel报告",
+        "docPath": "skills/rta-exclude-strategy/SKILL.md",
+        "command": "/rta-exclude-strategy",
+        "dependencies": {
+          "python": [
+            "pandas>=1.3.0",
+            "numpy>=1.20.0",
+            "openpyxl>=3.0.0"
+          ]
+        },
+        "tags": [
+          "rta",
+          "advertising",
+          "model-analysis",
+          "excel",
+          "reporting",
+          "automation"
+        ]
       },
       {
         "name": "ai-slop-cleaner",

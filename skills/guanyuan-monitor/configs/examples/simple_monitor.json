@@ -1,0 +1,29 @@
+{
+  "name": "简单阈值监控",
+  "description": "监控单一指标是否超过阈值",
+
+  "schedule": "every 30 minutes",
+
+  "monitors": [
+    {
+      "name": "订单量监控",
+      "card_id": "card_12345",
+      "metric_field": "order_count",
+      "rules": [
+        {
+          "type": "threshold",
+          "operator": "lt",
+          "threshold": 100,
+          "alert_level": "warning",
+          "message": "订单量低于100"
+        }
+      ]
+    }
+  ],
+
+  "notification": {
+    "template_code": "DING_DEFAULT_ALERT",
+    "biz_type": "common",
+    "recipients": ["12345678"]
+  }
+}
