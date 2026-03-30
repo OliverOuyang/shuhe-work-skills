@@ -1,0 +1,25 @@
+# Skills 目录
+
+此目录用于存放所有 Claude Code Skills。
+
+每个 Skill 应按以下结构组织：
+
+```
+skills/
+└── <skill-name>/
+    ├── SKILL.md          # Skill 说明文档（必需）
+    ├── main.py           # 主执行逻辑（必需）
+    ├── config.json       # 配置文件（可选）
+    ├── requirements.txt  # Python 依赖（可选）
+    └── tests/            # 测试用例（推荐）
+```
+
+## 添加新 Skill
+
+1. 在此目录下创建新的 Skill 子目录
+2. 创建 SKILL.md 文档
+3. 实现主逻辑
+4. 在根目录 package.json 中注册
+5. 更新根目录 README.md
+
+详细开发规范请参考根目录 README.md 的"贡献指南"部分。

@@ -1,0 +1,17 @@
+{
+  "page_id": "<your-page-id>",
+  "page_name": "<看板名称>",
+  "default_date_range": {
+    "start": "2025-01-01",
+    "end": "today"
+  },
+  "cards": [
+    {
+      "card_id": "<card-id-from-guanyuan>",
+      "card_name": "<卡片名称>",
+      "filter_template": "A",
+      "output_filename": "<output_name>.csv",
+      "tab_name": "默认"
+    }
+  ]
+}

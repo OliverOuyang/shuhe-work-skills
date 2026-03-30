@@ -1,0 +1,118 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+junit/
+
+# Logging
+*.log
+logs/
+test_output/
+*.log.*
+
+# Environment
+.env
+.env.local
+.env.*.local
+secrets/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+.~*
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+$RECYCLE.BIN/
+
+# IDE caches
+.vscode/settings.json
+.idea/workspace.xml
+.idea/modules.xml
+.idea/libraries/
+
+# Project specific
+.claudeplugin-cache/
+*.cache
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Generated files
+*.generated.py
+config.local.json
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Distribution
+/dist
+/build
+*.tar.gz
+*.zip
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# API responses (for testing)
+test_responses/
+
+# Claude Code cache
+.claude/cache/
