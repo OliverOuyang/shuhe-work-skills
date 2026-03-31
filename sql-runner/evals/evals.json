@@ -1,0 +1,119 @@
+{
+  "skill_name": "sql-runner",
+  "version": "1.0.0",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我运行这个SQL查询: C:\\Users\\Oliver\\Desktop\\数禾工作\\16_AI项目\\2_预算MMM模型\\Data\\预算代码.sql",
+      "expected_output": "应该: (1)读取SQL文件 (2)提取查询名称'预算核心统计报表' (3)提交到Dataphin (4)轮询状态每5秒 (5)保存结果到data/预算核心统计报表_20260331_HHMMSS.csv (6)报告行数和路径",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "execute this SQL file and save results: D:\\projects\\queries\\channel_conversion.sql",
+      "expected_output": "应该: (1)读取SQL (2)从header提取查询名 (3)提交查询 (4)显示进度(0s, 5s, 10s...) (5)超时前完成 (6)保存CSV到data/子目录 (7)UTF-8 BOM编码",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "run SQL query from /home/user/analytics/budget_stats.sql",
+      "expected_output": "应该: (1)处理Unix路径 (2)如果无查询名则用文件名 (3)处理中文字符 (4)创建data目录如果不存在 (5)时间戳防止覆盖 (6)空结果也创建CSV",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "这个查询跑了很久还没结果,帮我执行: test_long_query.sql",
+      "expected_output": "应该: (1)提交查询 (2)每5秒显示进度 (3)5分钟后超时 (4)超时前调用kill_dp_query (5)报告超时错误",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "submit this query to dataphin: queries/complex_join.sql, 但我可能没权限",
+      "expected_output": "应该: (1)尝试提交 (2)捕获权限错误 (3)提示用户申请表权限 (4)给出apply_dp_table_permission建议 (5)不继续执行",
+      "files": []
+    }
+  ],
+  "test_scenarios": [
+    {
+      "scenario": "successful_execution",
+      "description": "正常查询执行流程",
+      "steps": [
+        "读取包含Query Name的SQL文件",
+        "提交查询获取task_id",
+        "轮询状态3次后返回SUCCESS",
+        "保存结果到CSV",
+        "验证文件名格式和时间戳"
+      ]
+    },
+    {
+      "scenario": "no_query_name",
+      "description": "SQL文件无header注释",
+      "steps": [
+        "读取无Query Name的SQL",
+        "使用文件名作为查询名",
+        "正常执行后续流程",
+        "文件名应为{filename}_{timestamp}.csv"
+      ]
+    },
+    {
+      "scenario": "query_timeout",
+      "description": "查询超时处理",
+      "steps": [
+        "提交查询",
+        "轮询60次仍为RUNNING状态",
+        "达到300秒超时",
+        "调用kill_dp_query",
+        "抛出TimeoutError"
+      ]
+    },
+    {
+      "scenario": "permission_denied",
+      "description": "表权限不足",
+      "steps": [
+        "提交查询",
+        "返回权限错误",
+        "提示用户申请权限",
+        "不创建输出文件",
+        "退出码非0"
+      ]
+    },
+    {
+      "scenario": "empty_results",
+      "description": "查询返回0行",
+      "steps": [
+        "查询成功但data为空列表",
+        "仍创建CSV文件",
+        "文件为空或仅包含header",
+        "报告0行结果",
+        "退出码0"
+      ]
+    },
+    {
+      "scenario": "chinese_filename",
+      "description": "中文查询名处理",
+      "steps": [
+        "Query Name包含中文",
+        "sanitize时保留中文字符",
+        "替换空格和特殊字符为_",
+        "文件名正确包含中文",
+        "CSV用UTF-8 BOM保存"
+      ]
+    }
+  ],
+  "performance_metrics": {
+    "target_polling_interval": "5s",
+    "max_timeout": "300s",
+    "expected_file_creation_time": "<1s",
+    "csv_encoding": "utf-8-sig"
+  },
+  "edge_cases": [
+    "SQL文件路径包含空格",
+    "SQL文件路径包含中文",
+    "查询名包含特殊字符: <>:\"/\\|?*",
+    "data/目录已存在同名旧文件",
+    "SQL包含${bizdate}等变量",
+    "查询返回超过10000行",
+    "网络临时中断后恢复",
+    "Dataphin返回非标准状态"
+  ]
+}
