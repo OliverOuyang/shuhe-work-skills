@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-03-31
+
+### Added
+- **skill-lifecycle-manager** - Skills 生命周期管理器
+  - 版本管理和语义化版本升级
+  - 依赖检查和依赖图可视化
+  - 使用统计和性能监控
+  - Skills 库健康报告生成
+  - 与 npx skills 市场集成（搜索、安装、更新）
+  - 批量更新和安全回滚机制
+- **skill-auto-evolver** - Skills 自动进化器
+  - 自动收集 skill 执行数据（成功率、执行时间、错误模式）
+  - 识别性能瓶颈和优化机会
+  - 基于使用模式自动建议改进
+  - 自动生成优化后的 skill 版本
+  - A/B 测试框架（对比新旧版本效果）
+  - 自动版本迭代和回归测试
+
+### Changed
+- 更新 package.json 版本至 1.6.0
+- 更新 README.md 新增生命周期管理 Skills 分类
+- Skills 总数：38 → 40（3 数禾定制 + 4 数据工具 + 30 OMC + 1 治理规范 + 2 生命周期管理）
+
+## [1.5.0] - 2026-03-31
+
+### Added
+- **skill-governance** - Skills 库治理规范（强制性守门 skill）
+  - 5 阶段治理流程：需求确认 → 结构创建 → 注册校验 → 文档同步 → 提交规范
+  - 覆盖新增、更新、删除三种场景
+  - 两种 SKILL.md 模板（执行型 / 工作流型）
+  - 命名规范、注册规范、提交规范定义
+  - `.claude/rules/skill-governance.md` 自动加载规则，确保 CC session 操作 skills/ 时强制遵循
+
+### Changed
+- 更新 package.json 版本至 1.5.0
+- 更新 README.md 新增治理与规范 Skills 分类
+- Skills 总数：37 → 38（3 数禾定制 + 4 数据工具 + 30 OMC + 1 治理规范）
+
 ## [1.4.0] - 2026-03-31
 
 ### Added

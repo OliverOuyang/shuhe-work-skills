@@ -4,7 +4,7 @@
 
 **目标用户**: 数禾数据分析师、企业级数据平台用户（观远、Dataphin）、需要自动化数据分析和报告生成的团队成员
 
-**版本**: v1.4.0 | **Skills 总数**: 37 个（3 数禾定制 + 4 数据工具 + 30 oh-my-claudecode）
+**版本**: v1.6.0 | **Skills 总数**: 40 个（3 数禾定制 + 4 数据工具 + 30 oh-my-claudecode + 1 治理规范 + 2 生命周期管理）
 
 ---
 
@@ -71,6 +71,18 @@ claude
 | **monthly-report-html-generator** | 自动生成月度运营数据HTML报告 | • 数据可视化<br>• 图表渲染<br>• 交互式报告 | `/monthly-report-html-generator` |
 
 **依赖**: sql-runner 需要配置 Dataphin MCP（MCP: `sh_dp_mcp`）
+
+---
+
+### 治理与规范 Skills
+
+| Skill 名称 | 功能描述 | 使用场景 | 命令 |
+|-----------|---------|---------|------|
+| **skill-governance** | Skills 库治理规范 - 强制性守门流程 | • 新增 skill 时遵循标准流程<br>• 更新 skill 时确保文档同步<br>• 删除 skill 时清理所有引用 | `/skill-governance` |
+| **skill-lifecycle-manager** | Skills 生命周期管理器 | • 版��管理和升级<br>• 依赖检查和可视化<br>• 使用统计和健康报告 | `/skill-lifecycle-manager` |
+| **skill-auto-evolver** | Skills 自动进化器 | • 性能数据收集<br>• 自动优化建议<br>• A/B测试和版本迭代 | `/skill-auto-evolver` |
+
+**说明**: 任何 CC session 操作 skills/ 目录时，`.claude/rules/skill-governance.md` 会自动加载治理约束
 
 ---
 
@@ -314,7 +326,7 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 🔖 版本信息
 
-- **当前版本**: v1.4.0
+- **当前版本**: v1.5.0
 - **发布日期**: 2026-03-31
 - **oh-my-claudecode 版本**: v4.9.3
 - **最后更新**: 2026-03-31
