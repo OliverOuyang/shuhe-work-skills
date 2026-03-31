@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-03-31
+
+### Added
+- **sql-optimizer** - SQL 优化和清理工具
+  - 添加结构化文档注释（文件头、章节标记、术语表）
+  - 改进 SQL 格式（一致缩进、CASE 语句格式化）
+  - Hive/MaxCompute 语法验证
+  - 支持变量占位符（${bizdate}、${pt}）
+- **sql-runner** - SQL 执行工具
+  - 使用 Dataphin MCP 工具自动提交查询
+  - 轮询查询状态（5秒间隔，5分钟超时）
+  - 自动保存结果为 CSV（带时间戳文件名）
+  - 完���的错误处理和边界测试
+- **html-report-framework** - HTML 报告通用框架
+  - PPT 风格排版模板
+  - 响应式布局方案和配色方案库
+  - 图表自动配置和布局引擎
+  - 常见问题诊断清单和修复模式库
+- **monthly-report-html-generator** - 月报 HTML 生成器
+  - 从 Excel/CSV/Dataphin 自动生成交互式报告
+  - Chart.js 集成（27+ 图表类型）
+  - 侧边栏导航和可编辑内容
+  - 数据准确性校验工具
+
+### Changed
+- 更新 package.json 版本至 1.4.0
+- 更新 README.md 新增数据工具 Skills 分类
+- Skills 总数：33 → 37（3 数禾定制 + 4 数据工具 + 30 OMC）
+- 更新 .gitignore 添加 .omc/ 和生成文件规则
+
 ## [1.3.0] - 2026-03-30
 
 ### Added

@@ -57,6 +57,18 @@ test_output/
 # Environment
 .env
 .env.local
+
+# oh-my-claudecode 状态目录
+.omc/
+
+# 生成的报告文件
+*.html
+!**/templates/*.html
+!**/examples/*.html
+
+# 测试临时文件
+test_data.csv
+nul
 .env.*.local
 secrets/
 

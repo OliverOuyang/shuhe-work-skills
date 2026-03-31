@@ -1,6 +1,6 @@
 {
   "name": "shuhe-work-skills",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "数禾工作场景Skills集合 + oh-my-claudecode 完整工具链",
   "author": "数禾DS团队",
   "license": "MIT",
@@ -253,6 +253,41 @@
         "description": "Agentic memory system for writers - track characters, relationships, scenes",
         "docPath": "skills/writer-memory/SKILL.md",
         "command": "/writer-memory"
+      },
+      {
+        "name": "sql-optimizer",
+        "version": "1.0.0",
+        "description": "Optimize and clean SQL queries with structured comments, format improvements, and syntax validation",
+        "docPath": "skills/sql-optimizer/SKILL.md",
+        "command": "/sql-optimizer",
+        "tags": ["sql", "optimization", "hive", "maxcompute", "formatting"]
+      },
+      {
+        "name": "sql-runner",
+        "version": "1.0.0",
+        "description": "Execute optimized SQL files using Dataphin MCP tools with automatic polling and result management",
+        "docPath": "skills/sql-runner/SKILL.md",
+        "command": "/sql-runner",
+        "dependencies": {
+          "mcp": ["sh_dp_mcp"]
+        },
+        "tags": ["sql", "dataphin", "execution", "automation"]
+      },
+      {
+        "name": "html-report-framework",
+        "version": "1.0.0",
+        "description": "HTML报告生成通用框架 - 设计美化、内容生成、排版调整和常见问题解决方案",
+        "docPath": "skills/html-report-framework/SKILL.md",
+        "command": "/html-report-framework",
+        "tags": ["html", "report", "visualization", "framework"]
+      },
+      {
+        "name": "monthly-report-html-generator",
+        "version": "1.0.0",
+        "description": "从数据源自动生成月度运营数据 HTML 报告，包含图表、结论、层级导航",
+        "docPath": "skills/monthly-report-html-generator/SKILL.md",
+        "command": "/monthly-report-html-generator",
+        "tags": ["monthly-report", "html", "automation", "charts"]
       }
     ]
   },

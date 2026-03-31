@@ -4,7 +4,7 @@
 
 **目标用户**: 数禾数据分析师、企业级数据平台用户（观远、Dataphin）、需要自动化数据分析和报告生成的团队成员
 
-**版本**: v1.3.0 | **Skills 总数**: 33 个（3 数禾定制 + 30 oh-my-claudecode）
+**版本**: v1.4.0 | **Skills 总数**: 37 个（3 数禾定制 + 4 数据工具 + 30 oh-my-claudecode）
 
 ---
 
@@ -58,6 +58,19 @@ claude
 | **rta-exclude-strategy** | RTA排除策略自动分析工具 - 基于V8/V9RN二维交叉分析 | • 广告投放排除策略制定<br>• 模型分组交叉分析<br>• 自动生成Excel分析报告 | `/rta-exclude-strategy` |
 
 **依赖**: 需要配置观远 API 权限（MCP: `guanyuan-data`）和钉钉通知（MCP: `messagengine-dingtalk`）
+
+---
+
+### 数据工具 Skills
+
+| Skill 名称 | 功能描述 | 使用场景 | 命令 |
+|-----------|---------|---------|------|
+| **sql-optimizer** | 优化和清理SQL查询，添加结构化注释和格式改进 | • SQL代码规范化<br>• 添加文档注释<br>• Hive/MaxCompute语法验证 | `/sql-optimizer` |
+| **sql-runner** | 使用Dataphin MCP工具执行SQL文件 | • 自动提交查询<br>• 轮询结果<br>• 保存为CSV文件 | `/sql-runner` |
+| **html-report-framework** | HTML报告生成通用框架 | • 报告设计美化<br>• 内容生成<br>• 排版调整 | `/html-report-framework` |
+| **monthly-report-html-generator** | 自动生成月度运营数据HTML报告 | • 数据可视化<br>• 图表渲染<br>• 交互式报告 | `/monthly-report-html-generator` |
+
+**依赖**: sql-runner 需要配置 Dataphin MCP（MCP: `sh_dp_mcp`）
 
 ---
 
@@ -301,10 +314,10 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 🔖 版本信息
 
-- **当前版本**: v1.3.0
-- **发布日期**: 2026-03-30
+- **当前版本**: v1.4.0
+- **发布日期**: 2026-03-31
 - **oh-my-claudecode 版本**: v4.9.3
-- **最后更新**: 2026-03-30
+- **最后更新**: 2026-03-31
 
 **更新日志**: 查看 [CHANGELOG.md](CHANGELOG.md) 了解详细变更
 

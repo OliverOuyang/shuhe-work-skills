@@ -259,21 +259,19 @@ def main():
     output_path = data_dir / output_filename
 
     try:
-        # Extract columns and rows from MCP response
-        columns = result.get('columns', [])
-        rows = result.get('rows', [])
+        # Extract data from MCP response
+        # MCP returns data as 2D array where first row is header
+        data = result.get('data', [])
 
-        # Construct data: [header, row1, row2, ...]
-        data = [columns] + rows if columns else rows
+        if data:
+            columns = data[0] if data else []
+            rows = data[1:] if len(data) > 1 else []
 
-        # Debug logging
-        print(f"Columns: {len(columns)} fields")
-        print(f"Data rows: {len(rows)} rows")
-
-        if not data:
+            # Report data size
+            print(f"Columns: {len(columns)} fields")
+            print(f"Data rows: {len(rows)} rows")
+        else:
             print("Warning: Query returned no data")
-        elif not columns:
-            print("Warning: No column headers found in result")
 
         save_results(data, output_path)
         print(f"\n✓ Execution completed successfully")

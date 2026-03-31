@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from data_preprocessing import load_data, preprocess_data, split_control_group, validate_data
 from place_in_out_algorithm import run_place_in_out_algorithm
 from report_generator import generate_report
+from html_report_generator import generate_html_report
 
 
 def parse_arguments():
@@ -73,6 +74,14 @@ def parse_arguments():
         help='输出文件路径（默认：当前目录）'
     )
 
+    parser.add_argument(
+        '--output_format',
+        type=str,
+        choices=['excel', 'html', 'both'],
+        default='both',
+        help='输出报告格式：excel、html或both（默认：both）'
+    )
+
     return parser.parse_args()
 
 
@@ -97,6 +106,7 @@ def main():
     print(f"  安全过件率阈值: {args.spr_threshold*100:.0f}%")
     print(f"  最大排除交易占比: {args.max_exclude_ratio*100:.0f}%")
     print(f"  输出路径: {args.output_path}")
+    print(f"  输出格式: {args.output_format}")
 
     try:
         # 步骤1：加载数据
@@ -123,16 +133,30 @@ def main():
         )
 
         # 步骤6：生成报告
-        report_path = generate_report(
-            result,
-            old_exclude_rule,
-            output_path=args.output_path
-        )
+        report_paths = []
+
+        if args.output_format in ['excel', 'both']:
+            excel_report_path = generate_report(
+                result,
+                old_exclude_rule,
+                output_path=args.output_path
+            )
+            report_paths.append(excel_report_path)
+
+        if args.output_format in ['html', 'both']:
+            html_report_path = generate_html_report(
+                result,
+                old_exclude_rule,
+                output_path=args.output_path
+            )
+            report_paths.append(html_report_path)
 
         print("\n" + "="*100)
         print("分析完成！")
         print("="*100)
-        print(f"\n报告已生成: {report_path}")
+        print(f"\n报告已生成:")
+        for path in report_paths:
+            print(f"  {path}")
         print(f"\n关键结果:")
         print(f"  初始圈选: {len(result['initial_region'])} 个格子")
         print(f"  置入区域: {len(result['place_in_region'])} 个格子")

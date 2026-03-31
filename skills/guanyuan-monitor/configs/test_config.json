@@ -1,0 +1,37 @@
+{
+  "monitor_id": "test_monitor_001",
+  "monitor_name": "测试监控-业务指标",
+  "page_id": "s5ae19611527142af8fdbc59",
+  "cards": [
+    {
+      "card_id": "fdb467bb7583d47ae8b2ec12",
+      "card_name": "业务口径花费_分渠道",
+      "rules": [
+        {
+          "rule_type": "threshold",
+          "metric_column": "抖音",
+          "operator": ">",
+          "threshold": 15000000.0,
+          "description": "抖音渠道花费超过1500万元"
+        },
+        {
+          "rule_type": "threshold",
+          "metric_column": "精准营销",
+          "operator": ">",
+          "threshold": 17000000.0,
+          "description": "精准营销渠道花费超过1700万元"
+        }
+      ]
+    }
+  ],
+  "webhook": {
+    "url": "https://oapi.dingtalk.com/robot/send?access_token=test_token",
+    "secret": "SECtestkey123456",
+    "keywords": ["数据监控", "告警"]
+  },
+  "schedule": {
+    "frequency": "daily",
+    "time": "09:00"
+  },
+  "dry_run": true
+}
