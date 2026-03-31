@@ -161,6 +161,143 @@ Output: C:\Users\Oliver\Desktop\project\queries\data\Budget_Core_Statistics_2026
 
 **Empty Results**: If query returns zero rows, still create the CSV with just the header row and notify user.
 
+## Known Limitations
+
+Based on boundary testing, this skill has the following limitations:
+
+1. **Maximum Result Size**: Dataphin enforces a hard limit of 10,000 rows per query. If your result set exceeds this, the data will be truncated. Use filtering or data export tools for larger datasets.
+
+2. **Timeout Enforcement**: Queries that run longer than 5 minutes (300 seconds) will be automatically killed. Very complex queries may need optimization or a custom timeout configuration.
+
+3. **File Path Constraints**:
+   - Paths with spaces are supported and handled correctly
+   - Paths with Chinese characters are supported (UTF-8)
+   - Maximum path length varies by OS (255 chars on most systems)
+
+4. **Query Name Sanitization**:
+   - Special characters `< > : " / \ | ? *` are replaced with underscore
+   - Spaces are converted to underscores
+   - Chinese characters are preserved
+   - Query names longer than ~200 chars may cause issues with file systems
+
+5. **Status Update Frequency**: Status is only printed when it changes, not every 5 seconds. This reduces console spam but means status updates may not appear if the query status remains constant.
+
+6. **Network Resilience**: Single connection failures during polling are not retried. Network interruptions lasting >5 seconds between polls may cause query abandonment.
+
+7. **CSV Size**: While result rows are limited to 10,000, very wide tables (1000+ columns) may create large CSV files (>100MB).
+
+## Data Extraction & CSV Format
+
+This skill extracts data from Dataphin queries and formats it as CSV with these specifications:
+
+**Data Structure**:
+- Results returned as list of lists: `[[header1, header2, ...], [row1_val1, row1_val2, ...], ...]`
+- First row is always treated as the header row
+- Data rows contain string values
+- Empty/null values are represented as empty strings
+
+**CSV Encoding & Format**:
+- Encoding: UTF-8 with BOM (utf-8-sig)
+- BOM prefix ensures Excel opens the file correctly and recognizes encoding
+- Line endings: LF (Unix-style, compatible with Excel)
+- Delimiter: Comma (,)
+- Quote character: Double quote (")
+- Escape method: Double quote escaping
+
+**Filename Generation**:
+```
+{sanitized_query_name}_{timestamp}.csv
+Timestamp format: YYYYMMDD_HHMMSS (e.g., 20260331_143022)
+Example: Budget_Core_Statistics_20260331_143022.csv
+```
+
+**Directory Structure**:
+```
+Input SQL:  C:\Projects\queries\budget_stats.sql
+Output CSV: C:\Projects\queries\data\Budget_Core_Statistics_20260331_143022.csv
+            └─ Created in "data/" subdirectory relative to SQL file location
+```
+
+**Empty Result Handling**:
+- If query returns 0 data rows, CSV is created with header row only
+- Row count reported as 0
+- File still created to indicate successful query execution
+
+## Error Handling Enhancements
+
+This skill implements robust error handling across multiple scenarios:
+
+**Permission Errors**:
+- Detected when Dataphin returns permission/authorization errors
+- User is prompted with: "You don't have access to the required tables"
+- Suggestion provided: "Use `apply_dp_table_permission` to request table access"
+- Execution stops immediately, no output file created
+- Exit code: 1 (failure)
+
+**Syntax Errors**:
+- Detected when SQL parsing fails in Dataphin
+- Full error message displayed to user with details if available
+- Line number and column information included when provided by Dataphin
+- No output file created
+- Exit code: 1 (failure)
+
+**Timeout Handling**:
+- Query automatically killed after 300 seconds (5 minutes)
+- `kill_dp_query` MCP tool called before exiting
+- User receives clear timeout message with elapsed time
+- Prevents resource waste on Dataphin side
+- Exit code: 1 (failure)
+
+**Connection Errors During Submission**:
+- Initial submission failure triggers error report
+- Single retry logic (future enhancement)
+- If both attempts fail, user sees submission error
+- Exit code: 1 (failure)
+
+**Status Polling Failures**:
+- If poll request fails during execution, error is reported
+- Query may continue running on Dataphin side
+- Manual kill via `kill_dp_query` may be needed
+- Exit code: 1 (failure)
+
+**File System Errors**:
+- Directory creation failures are caught and reported
+- File write permissions issues generate clear error message
+- Path validation occurs before query submission
+- Exit code: 1 (failure)
+
+## Usage Precautions
+
+**Before Running Queries**:
+
+1. **Check Query Performance**: Very complex queries with many JOINs or aggregations may timeout. Test locally or with LIMIT 100 first.
+
+2. **Verify Table Permissions**: If you're unsure about access, check permissions before running. Permission errors stop execution immediately.
+
+3. **Monitor Result Size**: Be aware of how many rows your query returns. 10,000-row limit is enforced by Dataphin.
+
+4. **Handle Chinese Characters**: Query names and file paths with Chinese characters work correctly, but ensure your terminal supports UTF-8 output.
+
+5. **Plan for Long Queries**: Queries running longer than 5 minutes will timeout. Consider optimizing SQL or increasing timeout if needed.
+
+**During Query Execution**:
+
+1. **Progress Monitoring**: Status updates appear when query status changes (RUNNING → SUCCESS or FAILED), not every 5 seconds. Be patient.
+
+2. **Don't Interrupt**: The skill handles timeouts automatically. Let it complete rather than manually stopping.
+
+3. **Network Stability**: Maintain stable network connection during polling. Disconnections >5 seconds may cause issues.
+
+**After Query Completion**:
+
+1. **Verify Output**: Check that the CSV file was created in `data/` subdirectory with correct naming and data.
+
+2. **Excel Compatibility**: CSV is UTF-8 with BOM, so it opens directly in Excel. No conversion needed.
+
+3. **Timestamp Uniqueness**: Each run creates a new file with current timestamp. Old results are never overwritten (unless you manually delete them).
+
+4. **Large Files**: If result set is large (>50MB), Excel may be slow opening it. Consider using dedicated CSV viewers for analysis.
+
 ## Success Criteria
 
 A successful execution should:

@@ -259,9 +259,21 @@ def main():
     output_path = data_dir / output_filename
 
     try:
-        data = result.get('data', [])
+        # Extract columns and rows from MCP response
+        columns = result.get('columns', [])
+        rows = result.get('rows', [])
+
+        # Construct data: [header, row1, row2, ...]
+        data = [columns] + rows if columns else rows
+
+        # Debug logging
+        print(f"Columns: {len(columns)} fields")
+        print(f"Data rows: {len(rows)} rows")
+
         if not data:
             print("Warning: Query returned no data")
+        elif not columns:
+            print("Warning: No column headers found in result")
 
         save_results(data, output_path)
         print(f"\n✓ Execution completed successfully")
