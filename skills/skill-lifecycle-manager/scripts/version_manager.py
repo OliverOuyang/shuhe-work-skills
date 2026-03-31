@@ -26,29 +26,49 @@ class VersionManager:
             data = json.load(f)
             return data.get('version', 'unknown')
     
-    def list_skills(self) -> Dict[str, str]:
-        """列出所有 skills 及其版本"""
-        skills = {}
-        
+    def list_skills(self):
+        """列出所有 skills (返回完整的 skill 对象列表)"""
         if not self.package_json.exists():
-            return skills
-        
+            return []
+
         with open(self.package_json, 'r', encoding='utf-8') as f:
             data = json.load(f)
-            skill_list = data.get('claudePlugin', {}).get('skills', [])
-            
-            for skill in skill_list:
-                name = skill.get('name')
-                version = skill.get('version', self.get_plugin_version())
-                if name:
-                    skills[name] = version
-        
-        return skills
+            return data.get('claudePlugin', {}).get('skills', [])
+
+    def get_skill_info(self, skill_name: str):
+        """获取特定 skill 的完整信息"""
+        skills = self.list_skills()
+        return next((s for s in skills if s.get('name') == skill_name), None)
     
+    def bump_skill_version(self, skill_name: str, bump_type: str = 'patch') -> str:
+        """升级 skill 版本"""
+        skill = self.get_skill_info(skill_name)
+        if not skill:
+            raise ValueError(f"Skill '{skill_name}' not found")
+
+        current_version = skill.get('version', self.get_plugin_version())
+        new_version = self.bump_version(current_version, bump_type)
+
+        # Update package.json
+        with open(self.package_json, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        for s in data['claudePlugin']['skills']:
+            if s['name'] == skill_name:
+                s['version'] = new_version
+                break
+
+        with open(self.package_json, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+
+        return new_version
+
     def get_skill_version(self, skill_name: str) -> Optional[str]:
         """获取特定 skill 的版本"""
-        skills = self.list_skills()
-        return skills.get(skill_name)
+        skill = self.get_skill_info(skill_name)
+        if skill:
+            return skill.get('version', self.get_plugin_version())
+        return None
     
     def parse_semver(self, version: str) -> Tuple[int, int, int]:
         """解析语义化版本号"""

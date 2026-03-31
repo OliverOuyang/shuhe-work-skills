@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2026-03-31
+
+### Added
+- **Complete Implementation of skill-lifecycle-manager**
+  - Functional CLI with version management, dependency checking, and statistics tracking
+  - `dependency_checker.py`: Check Python packages and MCP dependencies, generate dependency graphs
+  - `stats_tracker.py`: SQLite-based execution tracking and performance statistics
+  - `version_manager.py`: Enhanced with full CRUD operations for skill metadata
+  - Working CLI commands: list, info, bump, check-deps, dep-graph, stats, health
+
+- **Complete Implementation of skill-auto-evolver**
+  - Functional CLI with execution tracking and performance analysis
+  - `data_collector.py`: SQLite-based metrics collection with execution history
+  - Working CLI commands: record, metrics, history, analyze, suggest, status
+  - Performance metrics: success rate, latency percentiles (P50/P95/P99), execution counts
+  - Basic optimization suggestions based on metrics
+
+### Changed
+- Updated package.json version to 1.7.0
+- Updated README.md with complete feature descriptions
+- Skills now have working implementations instead of placeholders
+
+### Technical Details
+- Infrastructure: `.omc/stats/` and `.omc/evolution/` directories with SQLite databases
+- Both skills are production-ready with error handling and user-friendly CLI interfaces
+- Full Python 3.8+ compatibility with proper encoding handling
+
+### Notes
+- External skills installation (self-improving-agent, skill-vetter) deferred due to network connectivity issues
+- Can be added in future releases once network access is restored
+
 ## [1.6.0] - 2026-03-31
 
 ### Added
