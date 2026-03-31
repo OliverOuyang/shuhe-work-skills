@@ -1,0 +1,23 @@
+{
+  "skill_name": "sql-optimizer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我优化一下这个SQL,太乱了看不懂。文件路径: c:\\Users\\Oliver\\Desktop\\test_messy.sql",
+      "expected_output": "优化后的SQL应该: (1)移除重复查询 (2)添加文件头注释 (3)添加字段注释 (4)格式化对齐 (5)通过语法验证",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "这个查询有很多注释掉的代码,帮我清理一下并加上结构化的说明,路径在 D:\\data\\complex_query.sql",
+      "expected_output": "清理后应该: (1)删除无用注释代码 (2)保留有价值的业务说明 (3)添加分组标记(维度/指标) (4)添加术语解释",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "format this hive sql and add Chinese comments please: /home/user/etl/daily_report.sql",
+      "expected_output": "格式化后应该: (1)保持Hive语法不变 (2)添加中文注释 (3)清晰的CASE语句格式 (4)验证${bizdate}等变量正确",
+      "files": []
+    }
+  ]
+}
