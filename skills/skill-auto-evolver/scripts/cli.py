@@ -9,9 +9,19 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 try:
     from data_collector import DataCollector, ExecutionContext
+    from optimizer import SkillOptimizer
+    from analyzer import PerformanceAnalyzer
+    from regression import RegressionTester
+    from ab_testing import ABTestManager
     HAS_DATA_COLLECTOR = True
+    HAS_FULL_FEATURES = True
 except ImportError:
     HAS_DATA_COLLECTOR = False
+    HAS_FULL_FEATURES = False
+    SkillOptimizer = None
+    PerformanceAnalyzer = None
+    RegressionTester = None
+    ABTestManager = None
 
 @click.group()
 def cli():
@@ -104,12 +114,43 @@ def history(skill_name, limit):
 @click.argument('skill_name')
 def analyze(skill_name):
     """Analyze skill performance and identify bottlenecks."""
-    click.echo("Analysis feature - coming soon")
-    click.echo(f"Will analyze: {skill_name}")
-    click.echo("\nPlaceholder suggestions:")
-    click.echo("  - Consider adding caching for repeated operations")
-    click.echo("  - Review error patterns in execution history")
-    click.echo("  - Check P95 latency for performance outliers")
+    if not HAS_FULL_FEATURES or PerformanceAnalyzer is None:
+        click.echo("Performance analyzer requires additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        analyzer = PerformanceAnalyzer()
+        analysis = analyzer.analyze_bottlenecks(skill_name)
+
+        if 'error' in analysis:
+            click.echo(f"Error: {analysis['error']}", err=True)
+            sys.exit(1)
+
+        print(f"\n=== Performance Analysis for '{skill_name}' ===\n")
+
+        if 'message' in analysis:
+            print(f"[INFO] {analysis['message']}")
+            return
+
+        metrics = analysis.get('metrics', {})
+        print(f"Performance Metrics:")
+        print(f"  Success Rate: {metrics.get('success_rate', 0):.1f}%")
+        print(f"  Avg Duration: {metrics.get('avg_duration_ms', 0):.0f}ms")
+        print(f"  P95 Duration: {metrics.get('p95_duration_ms', 0):.0f}ms")
+
+        bottlenecks = analysis.get('bottlenecks', [])
+        if bottlenecks:
+            print(f"\nBottlenecks Found ({len(bottlenecks)}):\n")
+            for i, bottleneck in enumerate(bottlenecks, 1):
+                print(f"{i}. [{bottleneck['severity'].upper()}] {bottleneck['type']}")
+                print(f"   {bottleneck['description']}")
+                print(f"   Recommendation: {bottleneck['recommendation']}\n")
+        else:
+            print("\n[OK] No bottlenecks detected")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
 
 @cli.command()
 @click.argument('skill_name')
@@ -154,15 +195,187 @@ def status():
         print("[OK] Data Collector: Available")
     else:
         print("[NO] Data Collector: Not available")
-    print("[NO] Performance Analyzer: Not yet implemented")
-    print("[NO] Auto Optimizer: Not yet implemented")
-    print("[NO] A/B Testing: Not yet implemented")
-    print("[NO] Regression Tester: Not yet implemented")
-    print("\nCurrent Features:")
+
+    if HAS_FULL_FEATURES:
+        print("[OK] Performance Analyzer: Available")
+        print("[OK] Auto Optimizer: Available")
+        print("[OK] A/B Testing: Available")
+        print("[OK] Regression Tester: Available")
+    else:
+        print("[NO] Performance Analyzer: Not available")
+        print("[NO] Auto Optimizer: Not available")
+        print("[NO] A/B Testing: Not available")
+        print("[NO] Regression Tester: Not available")
+
+    print("\nAvailable Features:")
     print("  - Execution recording (record)")
     print("  - Performance metrics (metrics)")
     print("  - Execution history (history)")
-    print("  - Basic optimization suggestions (suggest)")
+    print("  - Performance analysis (analyze)")
+    print("  - Optimization suggestions (suggest, optimize)")
+    print("  - Regression testing (regression-setup, regression-test)")
+    print("  - A/B testing (ab-create, ab-status, ab-promote)")
+
+# New commands for optimizer
+@cli.command()
+@click.argument('skill_name')
+@click.option('--apply', is_flag=True, help='Generate optimized version')
+@click.option('--version', default='1.0', help='Version for optimized output')
+def optimize(skill_name, apply, version):
+    """Analyze and optionally generate optimized skill version."""
+    if not HAS_FULL_FEATURES or SkillOptimizer is None:
+        click.echo("Optimizer requires additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        optimizer = SkillOptimizer()
+
+        if apply:
+            success = optimizer.generate_optimized_version(skill_name, version)
+            sys.exit(0 if success else 1)
+        else:
+            analysis = optimizer.analyze_skill(skill_name)
+
+            print(f"\n=== Optimization Analysis for '{skill_name}' ===\n")
+
+            if 'error' in analysis:
+                print(f"[ERROR] {analysis['error']}")
+                sys.exit(1)
+
+            if 'message' in analysis:
+                print(f"[INFO] {analysis['message']}")
+                return
+
+            opportunities = analysis.get('opportunities', [])
+            if opportunities:
+                print(f"Found {len(opportunities)} optimization opportunities:\n")
+                for i, opp in enumerate(opportunities, 1):
+                    print(f"{i}. [{opp['severity'].upper()}] {opp['type']}")
+                    print(f"   {opp['description']}")
+                    print(f"   Impact: {opp['impact']}\n")
+                print(f"Run with --apply --version <ver> to generate optimized version")
+            else:
+                print("[OK] No optimization opportunities found")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+# Regression testing commands
+@cli.command()
+@click.argument('skill_name')
+def regression_setup(skill_name):
+    """Set up regression test baseline for a skill."""
+    if not HAS_FULL_FEATURES or RegressionTester is None:
+        click.echo("Regression tester requires additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        tester = RegressionTester()
+        success = tester.setup_test_suite(skill_name)
+        sys.exit(0 if success else 1)
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.argument('skill_name')
+@click.argument('version')
+def regression_test(skill_name, version):
+    """Run regression tests for a skill version."""
+    if not HAS_FULL_FEATURES or RegressionTester is None:
+        click.echo("Regression tester requires additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        tester = RegressionTester()
+        results = tester.run_regression_tests(skill_name, version)
+
+        print(f"\n=== Regression Test Results ===\n")
+
+        if 'message' in results:
+            print(f"[INFO] {results['message']}")
+            sys.exit(1)
+
+        summary = results['summary']
+        print(f"Total Tests: {summary['total_tests']}")
+        print(f"Passed: {summary['passed']}")
+        print(f"Failed: {summary['failed']}")
+        print(f"Pass Rate: {summary['pass_rate']:.1f}%")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+# A/B testing commands
+@cli.command()
+@click.argument('skill_name')
+@click.argument('variant_a')
+@click.argument('variant_b')
+@click.option('--split', default='50:50', help='Traffic split (e.g., 50:50)')
+def ab_create(skill_name, variant_a, variant_b, split):
+    """Create an A/B testing experiment."""
+    if not HAS_FULL_FEATURES or ABTestManager is None:
+        click.echo("A/B testing requires additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        manager = ABTestManager()
+        experiment_id = manager.create_experiment(skill_name, variant_a, variant_b, split)
+        print(f"\nExperiment ID: {experiment_id}")
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.argument('experiment_id')
+def ab_status(experiment_id):
+    """Show A/B testing experiment status."""
+    if not HAS_FULL_FEATURES or ABTestManager is None:
+        click.echo("A/B testing requires additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        manager = ABTestManager()
+        status = manager.get_experiment_status(experiment_id)
+
+        if 'error' in status:
+            print(f"[ERROR] {status['error']}")
+            sys.exit(1)
+
+        print(f"\n=== Experiment Status ===\n")
+        print(f"ID: {status['experiment_id']}")
+        print(f"Skill: {status['skill_name']}")
+        print(f"Status: {status['status']}")
+
+        for variant in ['a', 'b']:
+            variant_key = f'variant_{variant}'
+            metrics = status['metrics'][variant_key]
+
+            print(f"\nVariant {variant.upper()} ({status[variant_key]}):")
+            print(f"  Executions: {metrics['executions']}")
+            print(f"  Success Rate: {metrics.get('success_rate', 0):.1f}%")
+            print(f"  Avg Duration: {metrics.get('avg_duration_ms', 0):.0f}ms")
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.argument('experiment_id')
+def ab_promote(experiment_id):
+    """Promote winning variant and complete experiment."""
+    if not HAS_FULL_FEATURES or ABTestManager is None:
+        click.echo("A/B testing requires additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        manager = ABTestManager()
+        success = manager.promote_winner(experiment_id)
+        sys.exit(0 if success else 1)
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
 
 if __name__ == '__main__':
     cli()

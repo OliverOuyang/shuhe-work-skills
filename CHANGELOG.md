@@ -2,7 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.7.0] - 2026-03-31
+## [1.8.0] - 2026-03-31
+
+### Added
+- **Complete Advanced Features for skill-lifecycle-manager**
+  - `marketplace.py`: NPX skills marketplace integration (search, install, update)
+  - `rollback.py`: Git-based snapshot and rollback mechanism
+  - `health_reporter.py`: Comprehensive health reports with Excel export (openpyxl)
+  - New CLI commands: market-search, market-install, market-update, snapshot-create, snapshot-list, rollback, health-report
+
+- **Complete Advanced Features for skill-auto-evolver**
+  - `optimizer.py`: Skill optimization analysis and optimized version generation
+  - `analyzer.py`: Performance bottleneck identification and analysis
+  - `regression.py`: Regression testing framework with baseline comparison
+  - `ab_testing.py`: A/B testing framework with traffic routing and winner determination
+  - New CLI commands: optimize, analyze, regression-setup, regression-test, ab-create, ab-status, ab-promote
+
+### Changed
+- Updated skill-lifecycle-manager CLI with full feature integration
+- Updated skill-auto-evolver CLI with complete analysis and testing capabilities
+- Enhanced status commands to show all available features
+
+### Technical Details
+- All modules include comprehensive error handling and Windows compatibility
+- CLI integration tested and verified for all new commands
+- Optimization strategies: caching, parallel execution, error handling improvements
+- A/B testing uses hash-based deterministic routing
+- Regression testing supports baseline setup and version comparison
+- Health reports support both console output and Excel export
+
+## [1.7.0] - 2026-03-31 (Previous)
 
 ### Added
 - **Complete Implementation of skill-lifecycle-manager**

@@ -11,9 +11,15 @@ from version_manager import VersionManager
 try:
     from dependency_checker import DependencyChecker
     from stats_tracker import StatsTracker
+    from marketplace import MarketplaceClient
+    from rollback import SnapshotManager
+    from health_reporter import HealthReporter
     HAS_FULL_FEATURES = True
 except ImportError:
     HAS_FULL_FEATURES = False
+    MarketplaceClient = None
+    SnapshotManager = None
+    HealthReporter = None
 
 @click.group()
 def cli():
@@ -160,18 +166,146 @@ def health():
     try:
         vm = VersionManager()
         skills = vm.list_skills()
-        
+
         print("\n=== Skills Health Report ===\n")
         print(f"Total Skills: {len(skills)}")
         print(f"Plugin Version: {vm.get_plugin_version()}")
-        
+
         # Count skills with dependencies
         with_deps = sum(1 for s in skills if 'dependencies' in s)
         print(f"Skills with dependencies: {with_deps}")
-        
+
         print("\nNote: Full health report requires additional modules")
         print("Run with stats tracking enabled for detailed metrics")
-        
+
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.argument('query')
+def market_search(query):
+    """Search for skills in the NPX marketplace."""
+    if not HAS_FULL_FEATURES or MarketplaceClient is None:
+        click.echo("Marketplace features require additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        client = MarketplaceClient()
+        results = client.search_skills(query)
+
+        if results:
+            print(f"\nFound {len(results)} skills:\n")
+            for skill in results:
+                print(f"  {skill['name']}")
+                print(f"  Install: {skill['install_command']}\n")
+        else:
+            print("No skills found")
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.argument('package_name')
+@click.option('--local', is_flag=True, help='Install locally instead of globally')
+def market_install(package_name, local):
+    """Install a skill from the NPX marketplace."""
+    if not HAS_FULL_FEATURES or MarketplaceClient is None:
+        click.echo("Marketplace features require additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        client = MarketplaceClient()
+        success = client.install_skill(package_name, global_install=not local)
+        sys.exit(0 if success else 1)
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+@cli.command()
+def market_update():
+    """Update all installed skills from the marketplace."""
+    if not HAS_FULL_FEATURES or MarketplaceClient is None:
+        click.echo("Marketplace features require additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        client = MarketplaceClient()
+
+        # First check for updates
+        print("Checking for updates...")
+        updates = client.check_updates()
+
+        if not updates:
+            print("All skills are up to date")
+            return
+
+        print(f"\n{len(updates)} skills have updates available")
+
+        # Update all
+        success = client.update_all_skills()
+        sys.exit(0 if success else 1)
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.argument('label')
+def snapshot_create(label):
+    """Create a snapshot of the current skills state."""
+    if not HAS_FULL_FEATURES or SnapshotManager is None:
+        click.echo("Snapshot features require additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        manager = SnapshotManager()
+        snapshot_id = manager.create_snapshot(label)
+        print(f"\nSnapshot ID: {snapshot_id}")
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+@cli.command()
+def snapshot_list():
+    """List all available snapshots."""
+    if not HAS_FULL_FEATURES or SnapshotManager is None:
+        click.echo("Snapshot features require additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        manager = SnapshotManager()
+        snapshots = manager.list_snapshots()
+
+        if not snapshots:
+            print("No snapshots found")
+            return
+
+        print(f"\nFound {len(snapshots)} snapshots:\n")
+        for snapshot in snapshots:
+            print(f"  ID: {snapshot['id']}")
+            print(f"  Label: {snapshot.get('label', 'N/A')}")
+            print(f"  Created: {snapshot.get('created_at', 'N/A')}")
+            print(f"  Commit: {snapshot.get('commit', 'N/A')[:8]}")
+            if snapshot.get('has_uncommitted_changes'):
+                print(f"  [WARNING] Had uncommitted changes")
+            print()
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+@cli.command()
+@click.argument('snapshot_id')
+@click.option('--force', is_flag=True, help='Force rollback even with uncommitted changes')
+def rollback(snapshot_id, force):
+    """Rollback to a specific snapshot."""
+    if not HAS_FULL_FEATURES or SnapshotManager is None:
+        click.echo("Snapshot features require additional modules", err=True)
+        sys.exit(1)
+
+    try:
+        manager = SnapshotManager()
+        success = manager.rollback_to_snapshot(snapshot_id, force=force)
+        sys.exit(0 if success else 1)
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
         sys.exit(1)
