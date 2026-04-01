@@ -79,6 +79,7 @@ claude
 | Skill 名称 | 功能描述 | 使用场景 | 命令 |
 |-----------|---------|---------|------|
 | **skill-governance** | Skills 库治理规范 - 强制性守门流程 | • 新增 skill 时遵循标准流程<br>• 更新 skill 时确保文档同步<br>• 删除 skill 时清理所有引用 | `/skill-governance` |
+| **claude-dir-governance** | .claude 目录配置治理和性能优化 | • CLAUDE.md 变更管理<br>• MCP 服务器配置规范<br>• Skills 和 Hooks 治理<br>• 性能优化和验证 | `/claude-dir-governance` |
 | **skill-lifecycle-manager** | Skills 生命周期管理器 | • 版��管理和升级<br>• 依赖检查和可视化<br>• 使用统计和健康报告 | `/skill-lifecycle-manager` |
 | **skill-auto-evolver** | Skills 自动进化器 | • 性能数据收集<br>• 自动优化建议<br>• A/B测试和版本迭代 | `/skill-auto-evolver` |
 

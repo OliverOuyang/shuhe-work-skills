@@ -1,6 +1,6 @@
 {
   "name": "shuhe-work-skills",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "数禾工作场景Skills集合 + oh-my-claudecode 完整工具链",
   "author": "数禾DS团队",
   "license": "MIT",
@@ -32,7 +32,8 @@
       {
         "name": "guanyuan-monitor",
         "version": "1.0.0",
-        "description": "自动化观远数据监控系统 - 支持基于规则的告警判断、钉钉通知、定时任务调度",
+        "status": "prototype",
+        "description": "[PROTOTYPE] 自动化观远数据监控系统 - 支持基于规则的告警判断、钉钉通知、定时任务调度",
         "docPath": "skills/guanyuan-monitor/SKILL.md",
         "command": "/guanyuan-monitor",
         "dependencies": {
@@ -298,6 +299,14 @@
         "tags": ["governance", "standards", "workflow", "quality"]
       },
       {
+        "name": "claude-dir-governance",
+        "version": "1.0.0",
+        "description": ".claude 目录配置治理和性能优化规范",
+        "docPath": "skills/claude-dir-governance/SKILL.md",
+        "command": "/claude-dir-governance",
+        "tags": ["governance", "configuration", "performance", "claude-code"]
+      },
+      {
         "name": "skill-lifecycle-manager",
         "version": "1.0.0",
         "description": "Skills 生命周期管理器 - 版本管理、依赖检查、使用统计、健康报告",
@@ -324,6 +333,22 @@
           ]
         },
         "tags": ["auto-evolution", "optimization", "ab-testing", "performance"]
+      },
+      {
+        "name": "self-improving-agent",
+        "version": "1.0.0",
+        "description": "A universal self-improving agent that learns from ALL skill experiences. Uses multi-memory architecture to continuously evolve the codebase.",
+        "docPath": "skills/self-improving-agent/SKILL.md",
+        "command": "/self-improving-agent",
+        "tags": ["self-improvement", "learning", "memory", "evolution", "automation"]
+      },
+      {
+        "name": "skill-vetter",
+        "version": "1.0.0",
+        "description": "Security-first vetting for OpenClaw skills. Checks for red flags, permission scope, and suspicious patterns before installation.",
+        "docPath": "skills/skill-vetter/SKILL.md",
+        "command": "/skill-vetter",
+        "tags": ["security", "vetting", "audit", "safety", "governance"]
       }
     ]
   },

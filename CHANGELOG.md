@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.0] - 2026-04-01
+
+### Added
+- **claude-dir-governance**: .claude 目录配置治理和性能优化规范
+  - 4 个工作流：CLAUDE.md、MCP、Skills、Hooks 变更管理
+  - 性能优化原则（上下文 < 40K tokens）
+  - 自动化验证工具和快速检查清单
+  - 参考 skill-governance 模式，适配用户级配置管理
+
+## [1.9.2] - 2026-04-01
+
+### Changed
+- **skill-governance**: 基于 43 个 skills 质量审查结果优化治理文档
+  - 添加质量审查发现的关键问题清单（严重/警告/优化建议）
+  - 强化 YAML frontmatter、版本号、原型标记的检查要求
+  - 新增 SKILL.md 文档长度规范（推荐 200-400 行，硬性上限 500 行）
+  - 精简 SKILL.md 模板（减少冗余，突出核心信息）
+  - 添加注册一致性校验命令和脚本
+- **.claude/rules/skill-governance.md**: 同步更新快速检查清单和文档规范
+
+### Documentation
+- 完整质量审查报告: `.omc/review/FINAL-SUMMARY.md`
+- 修复完成报告: `.omc/review/FIXES-APPLIED.md`
+- 批次审查详情: `.omc/review/batch-{1-4}-report.md`
+
+## [1.9.1] - 2026-04-01
+
+### Added
+- Register **self-improving-agent** skill in package.json - Universal self-improving agent with multi-memory architecture
+- Register **skill-vetter** skill in package.json - Security-first vetting for OpenClaw skills
+- Add YAML frontmatter to **rta-exclude-strategy/SKILL.md** - Proper skill metadata for discovery
+
+### Changed
+- Mark **guanyuan-monitor** as `[PROTOTYPE]` status in package.json - Core functionality not yet implemented
+
+### Fixed
+- Resolved 2 critical registration issues (self-improving-agent, skill-vetter)
+- Resolved 3 warning issues from quality review
+- Skills library now 100% compliant with governance standards
+
 ## [1.9.0] - 2026-04-01
 
 ### Added
