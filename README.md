@@ -4,7 +4,7 @@
 
 **目标用户**: 数禾数据分析师、企业级数据平台用户（观远、Dataphin）、需要自动化数据分析和报告生成的团队成员
 
-**版本**: v1.8.0 | **核心 Skills**: 13 个（3 数禾定制 + 4 数据工具 + 3 治理规范 + 3 OMC 核心）
+**版本**: v1.8.0 | **核心 Skills**: 15 个（3 数禾定制 + 4 数据工具 + 3 治理规范 + 3 OMC 核心 + 2 测试工具）
 
 ---
 
@@ -95,6 +95,19 @@ claude
 | **team** | N 个协调 agent 共享任务列表 | • 多人协作开发<br>• 复杂项目分工<br>• 并行功能开发 | `/team` |
 
 **说明**: 完整的 oh-my-claudecode 工具链包含 30+ skills，以上仅列出核心功能。完整列表见 `package.json`。
+
+---
+
+### 测试与调试 Skills
+
+| Skill 名称 | 功能描述 | 使用场景 | 命令 |
+|-----------|---------|---------|------|
+| **systematic-debugging** | 系统化调试方法论 - 根因分析优先 | • Bug 修复前的根因调查<br>• 测试失败分析<br>• 多组件系统故障排查<br>• 防止随机修复和症状掩盖 | `/systematic-debugging` |
+| **python-testing-patterns** | Python 测试最佳实践 - pytest/fixtures/mocking | • 编写单元测试<br>• 集成测试和 E2E 测试<br>• Mock 外部依赖<br>• TDD 开发流程 | `/python-testing-patterns` |
+
+**说明**:
+- **systematic-debugging** (45.1K 安装量，来自 obra/superpowers) - 强制根因调查流程，禁止未分析就修复
+- **python-testing-patterns** (10.8K 安装量，来自 wshobson/agents) - 全面的 pytest 测试模式和最佳实践
 
 ---
 

@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [1.9.0] - 2026-04-01
 
+### Added
+- **systematic-debugging** (45.1K 安装量，来自 obra/superpowers) - 系统化调试方法论，强制根因分析流程
+- **python-testing-patterns** (10.8K 安装量，来自 wshobson/agents) - Python 测试最佳实践（pytest/fixtures/mocking）
+- **README.md**: 新增"测试与调试 Skills"分类，包含 systematic-debugging 和 python-testing-patterns
+- **README.md**: Skills 总数更��为 15 个（3 数禾定制 + 4 数据工具 + 3 治理规范 + 3 OMC 核心 + 2 测试工具）
+
+### Changed
+- **skill-governance**: 完善治理体系，新增三大流程
+  - 阶段 2.5: 安全检测流程（skill-vetter 集成）- 强制红旗检测、权限范围、依赖安全
+  - 阶段 3.5: 版本与依赖管理（skill-lifecycle-manager 集成）- semver 规范、依赖冲突检测
+  - 新增"持续优化与自我进化"章节（skill-auto-evolver 集成）- 性能分析、A/B 测试、持续监控
+  - 更新快速参考：包含安全检测、依赖检查、性能优化三个完整流程
+  - 提交前检查清单新增：安全检测通过、依赖冲突检查、性能基准建立
+- **.claude/rules/skill-governance.md**: 同步更新治理约束规则
+  - 新增 skill 必须完成 6 个阶段（含安全检测）
+  - 更新 skill 必须执行版本管理和依赖检查
+  - 快速检查命令新增安全检测项
+
 ### Fixed
 - **sql-optimizer**: 修复 validate_sql.py 第176行 `'NVLNVL'` 拼写错误为 `'NVL'`
 - **sql-optimizer**: 添加文件路径安全验证（Path.resolve()）和10MB文件大小限制
