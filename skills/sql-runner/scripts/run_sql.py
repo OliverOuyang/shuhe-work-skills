@@ -40,22 +40,12 @@ def extract_query_name(sql_content):
 
 
 def sanitize_filename(name):
-    """Replace invalid filename characters with underscore.
-
-    Preserves Chinese characters and alphanumeric.
-    Replaces spaces and special characters with underscore.
-    Prevents path traversal by removing .. and absolute path prefixes.
-    """
-    # Remove path traversal sequences
+    """Replace invalid filename characters with underscore. Prevents path traversal."""
     name = name.replace('..', '').replace('/', '_').replace('\\', '_')
-    # Strip leading drive letters and separators
     name = re.sub(r'^[A-Za-z]:', '', name)
     name = name.lstrip('/\\')
-    # Replace invalid chars but keep Chinese characters
     sanitized = re.sub(r'[<>:"/\\|?*]+', '_', name)
-    # Replace multiple spaces with single underscore
     sanitized = re.sub(r'\s+', '_', sanitized)
-    # Remove leading/trailing underscores
     sanitized = sanitized.strip('_') or 'query'
     return sanitized
 
