@@ -10,6 +10,7 @@ from openpyxl.styles import Font, Alignment, PatternFill, numbers
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
+from utils import convert_old_rule_to_quantile, calc_spr, calc_cps
 
 
 def generate_report(result, old_exclude_rule, output_path=None):
@@ -138,52 +139,6 @@ def write_title(ws, row, title, font_size=14, bold=True):
     ws.cell(row=row, column=1).alignment = Alignment(horizontal='left')
     return row + 1
 
-
-def convert_old_rule_to_quantile(old_exclude_rule):
-    """
-    将老策略规则转换为聚合后的分位格式
-
-    Args:
-        old_exclude_rule: 老策略规则列表（如['01q', '02q', ...]）
-
-    Returns:
-        list: 聚合后的分位列表（如['01Q', '02Q']）
-    """
-    def map_to_quantile(value):
-        """将01q-20q映射到01Q-12Q"""
-        if isinstance(value, str) and value.endswith('q'):
-            try:
-                num = int(value[:-1])
-                if 1 <= num <= 9:
-                    return '01Q'
-                elif 10 <= num <= 20:
-                    q_num = num - 8
-                    return f'{q_num:02d}Q'
-            except ValueError:
-                return None
-        return None
-
-    quantiles = set()
-    for rule in old_exclude_rule:
-        q = map_to_quantile(rule)
-        if q:
-            quantiles.add(q)
-
-    return sorted(list(quantiles))
-
-
-def calc_spr(df):
-    """计算安全过件率"""
-    if df['t3_ato'].sum() > 0:
-        return df['t3_safe_adt'].sum() / df['t3_ato'].sum()
-    return 0
-
-
-def calc_cps(df):
-    """计算CPS"""
-    if df['t3_loan_amt'].sum() > 0:
-        return df['cost'].sum() / df['t3_loan_amt'].sum()
-    return 0
 
 
 # ============================================================================

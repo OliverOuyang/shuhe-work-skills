@@ -1,3 +1,10 @@
+> ⚠️ **PROTOTYPE - 开发中 / DO NOT USE IN PRODUCTION**
+>
+> 当前 `run_sql.py` 中的 MCP 集成为 **mock 实现**，不会真正调用 Dataphin API。
+> 实际使用时，Claude Code 会直接通过 MCP 协议调用 `sh_dp_mcp` 工具，无需运行此脚本。
+>
+> **正确用法**：直接在 Claude Code 对话中要求执行 SQL，Claude 会调用 MCP 工具。
+
 ---
 name: sql-runner
 description: Execute optimized SQL files using Dataphin MCP tools. Automatically submits queries, polls for results, and saves output to CSV with timestamped filenames. Use this skill when users mention "run SQL", "execute query", "submit to Dataphin", or want to fetch data from SQL files.

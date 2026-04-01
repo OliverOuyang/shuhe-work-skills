@@ -148,7 +148,7 @@ Run the validation script to check:
 
 Execute:
 ```bash
-python ~/.claude/skills/sql-optimizer/scripts/validate_sql.py <sql_file_path>
+python scripts/validate_sql.py <sql_file_path>
 ```
 
 If validation fails, fix the errors and re-validate before proceeding.

@@ -8,6 +8,7 @@ import numpy as np
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
+from utils import convert_old_rule_to_quantile, calc_spr, calc_cps
 
 
 def generate_html_report(result, old_exclude_rule, output_path=None):

@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.0] - 2026-04-01
+
+### Fixed
+- **sql-optimizer**: 修复 validate_sql.py 第176行 `'NVLNVL'` 拼写错误为 `'NVL'`
+- **sql-optimizer**: 添加文件路径安全验证（Path.resolve()）和10MB文件大小限制
+- **sql-optimizer**: 修复 SKILL.md 文档路径示例（Windows兼容格式）
+- **sql-optimizer**: 新增 evals/test_data/ 测试SQL文件（messy/commented/valid/syntax_error）
+- **sql-runner**: SKILL.md 顶部添加 `⚠️ PROTOTYPE` 警告区块，明确 MCP 为 mock 实现
+- **sql-runner**: sanitize_filename() 增强路径遍历防护（过滤 `..` 和绝对路径前缀）
+- **guanyuan-monitor**: SKILL.md 和 README.md 标记为 IN DEVELOPMENT 原型状态
+- **guanyuan-monitor**: 删除误导性文档 TEST_REPORT.md、simplified_test.py、test_skill.py
+- **guanyuan-data-fetcher**: card_config.py 添加 validate_date() 日期验证（拒绝如 2026-02-29 的无效日期）
+- **rta-exclude-strategy**: 提取共享工具函数到 utils.py（calc_spr、calc_cps、convert_old_rule_to_quantile）
+- **rta-exclude-strategy**: report_generator.py 和 html_report_generator.py 改为从 utils 导入，消除代码重复
+
+### Changed
+- 更新 package.json 版本至 1.9.0
+
 ## [1.8.0] - 2026-03-31
 
 ### Added

@@ -44,11 +44,19 @@ def sanitize_filename(name):
 
     Preserves Chinese characters and alphanumeric.
     Replaces spaces and special characters with underscore.
+    Prevents path traversal by removing .. and absolute path prefixes.
     """
+    # Remove path traversal sequences
+    name = name.replace('..', '').replace('/', '_').replace('\\', '_')
+    # Strip leading drive letters and separators
+    name = re.sub(r'^[A-Za-z]:', '', name)
+    name = name.lstrip('/\\')
     # Replace invalid chars but keep Chinese characters
     sanitized = re.sub(r'[<>:"/\\|?*]+', '_', name)
     # Replace multiple spaces with single underscore
     sanitized = re.sub(r'\s+', '_', sanitized)
+    # Remove leading/trailing underscores
+    sanitized = sanitized.strip('_') or 'query'
     return sanitized
 
 
@@ -58,6 +66,11 @@ def call_mcp_tool(tool_name, params):
     This is a placeholder that should be replaced with actual MCP protocol implementation.
     In production, Claude Code will handle MCP tool invocation.
     """
+    # ===================================================================
+    # ⚠️  WARNING: THIS IS A MOCK IMPLEMENTATION - NOT PRODUCTION READY
+    # In real usage, Claude Code calls MCP tools directly via the protocol.
+    # This script is for reference/documentation purposes only.
+    # ===================================================================
     print(f"[MCP] Calling tool: {tool_name}")
     print(f"[MCP] Parameters: {json.dumps(params, ensure_ascii=False, indent=2)}")
 

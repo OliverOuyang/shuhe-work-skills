@@ -1,6 +1,6 @@
 {
   "name": "shuhe-work-skills",
-  "version": "1.7.0",
+  "version": "1.9.0",
   "description": "数禾工作场景Skills集合 + oh-my-claudecode 完整工具链",
   "author": "数禾DS团队",
   "license": "MIT",
@@ -275,16 +275,16 @@
       },
       {
         "name": "html-report-framework",
-        "version": "1.0.0",
-        "description": "HTML报告生成通用框架 - 设计美化、内容生成、排版调整和常见问题解决方案",
+        "version": "1.1.0",
+        "description": "HTML 报告生成通用框架 - ECharts 图表、动态居中布局、可折叠侧栏、规则驱动结论、f-string 模板",
         "docPath": "skills/html-report-framework/SKILL.md",
         "command": "/html-report-framework",
         "tags": ["html", "report", "visualization", "framework"]
       },
       {
         "name": "monthly-report-html-generator",
-        "version": "1.0.0",
-        "description": "从数据源自动生成月度运营数据 HTML 报告，包含图表、结论、层级导航",
+        "version": "1.1.0",
+        "description": "从数据源自动生成月度运营数据 HTML 报告，支持 ECharts 图表、规则驱动结论、可折叠侧栏导航",
         "docPath": "skills/monthly-report-html-generator/SKILL.md",
         "command": "/monthly-report-html-generator",
         "tags": ["monthly-report", "html", "automation", "charts"]

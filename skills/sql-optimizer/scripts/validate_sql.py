@@ -173,7 +173,7 @@ class SQLValidator:
         hive_functions = [
             'TO_DATE', 'DATE_SUB', 'DATE_ADD', 'DATEDIFF',
             'SUBSTR', 'CONCAT', 'CONCAT_WS',
-            'IF', 'COALESCE', 'NVLNVL',
+            'IF', 'COALESCE', 'NVL',
             'ROW_NUMBER', 'RANK', 'DENSE_RANK',
             'LEAD', 'LAG',
             'PERCENTILE', 'PERCENTILE_APPROX'
@@ -219,6 +219,12 @@ def validate_sql_file(file_path: str) -> bool:
     """验证SQL文件"""
     try:
         path = Path(file_path)
+        # Security: resolve path and check file size
+        path = path.resolve()
+        MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+        if path.exists() and path.stat().st_size > MAX_FILE_SIZE:
+            print(f"❌ 文件过大（超过10MB限制）: {file_path}")
+            return False
         if not path.exists():
             print(f"❌ 文件不存在: {file_path}")
             return False

@@ -12,6 +12,29 @@ from datetime import datetime
 from pathlib import Path
 
 
+def validate_date(date_str: str, field_name: str = "date") -> str:
+    """Validate date string format YYYY-MM-DD and calendar validity.
+
+    Args:
+        date_str: Date string to validate
+        field_name: Name of the field for error messages
+
+    Returns:
+        The date string if valid
+
+    Raises:
+        ValueError: If date format is wrong or date is invalid (e.g., 2026-02-29)
+    """
+    try:
+        datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        raise ValueError(
+            f"无效日期 '{date_str}' in {field_name}: "
+            f"必须是 YYYY-MM-DD 格式的有效日期（例如 2026-03-31）"
+        )
+    return date_str
+
+
 # Default page configuration (backward compatible)
 PAGE_ID = "wac63dff1a9ee41988f87507"
 PAGE_NAME = "1.2 核心指标"
