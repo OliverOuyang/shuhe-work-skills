@@ -82,8 +82,11 @@ def generate_html_structure(df_combined, df_ctrl, exclude_region, old_exclude_v8
 </head>
 <body>
     <div class="container">
+        <!-- 侧栏折叠按钮 -->
+        <button id="sidebar-toggle" onclick="toggleSidebar()">&#9664;</button>
+
         <!-- 左侧导航栏 -->
-        <nav class="sidebar">
+        <nav class="sidebar" id="sidebar">
             <div class="logo">
                 <h2>RTA排除策略报告</h2>
                 <p class="timestamp">生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
@@ -146,13 +149,40 @@ def generate_css():
         /* 侧边栏样式 */
         .sidebar {
             position: fixed;
-            width: 280px;
+            left: 0;
+            top: 0;
+            width: 260px;
             height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(180deg, #1a365d 0%, #2d4a7a 100%);
             color: white;
             padding: 2rem 1.5rem;
             overflow-y: auto;
-            z-index: 1000;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-260px);
+        }
+
+        #sidebar-toggle {
+            position: fixed;
+            left: 260px;
+            top: 12px;
+            z-index: 101;
+            width: 28px;
+            height: 28px;
+            background: #1a365d;
+            color: #fff;
+            border: none;
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            font-size: 12px;
+            transition: left 0.3s ease;
+        }
+
+        body.sidebar-collapsed #sidebar-toggle {
+            left: 0;
         }
 
         .logo h2 {
@@ -218,56 +248,65 @@ def generate_css():
 
         /* 主内容区样式 */
         .content {
-            margin-left: 280px;
-            padding: 3rem;
-            width: calc(100% - 280px);
+            margin-left: max(260px, calc((100vw - 1200px) / 2));
+            padding: 32px 48px;
+            max-width: 1200px;
+            transition: margin-left 0.3s ease;
+        }
+
+        body.sidebar-collapsed .content {
+            margin-left: auto;
+            margin-right: auto;
         }
 
         section {
             background: white;
-            border-radius: 12px;
-            padding: 2rem 3rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-radius: 10px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            border-left: 4px solid #2b6cb0;
         }
 
         h1 {
-            font-size: 2rem;
-            color: #1a202c;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 3px solid #667eea;
-            letter-spacing: -0.5px;
+            font-size: 1.5rem;
+            color: #1a365d;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #2b6cb0;
+            font-weight: 700;
         }
 
         h2 {
-            font-size: 1.5rem;
-            color: #2d3748;
-            margin: 2rem 0 1.5rem;
+            font-size: 1.25rem;
+            color: #1a365d;
+            margin: 1.5rem 0 1rem;
+            font-weight: 600;
         }
 
         h3 {
-            font-size: 1.25rem;
-            color: #4a5568;
-            margin: 1.5rem 0 1rem;
+            font-size: 1.1rem;
+            color: #2d4a7a;
+            margin: 1.25rem 0 0.75rem;
+            font-weight: 600;
         }
 
         .conclusion-text {
-            background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
-            padding: 1.5rem 2rem;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            margin: 1.5rem 0;
-            font-size: 0.95rem;
+            background: #f7fafc;
+            padding: 1.25rem 1.75rem;
+            border-radius: 8px;
+            border-left: 4px solid #2b6cb0;
+            margin: 1.25rem 0;
+            font-size: 0.9rem;
         }
 
         .conclusion-text p {
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             line-height: 1.8;
         }
 
         .conclusion-text strong {
-            color: #667eea;
+            color: #2b6cb0;
             font-weight: 600;
         }
 
@@ -287,15 +326,16 @@ def generate_css():
         }
 
         thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a365d 0%, #2d4a7a 100%);
             color: white;
         }
 
         th {
-            padding: 1rem;
+            padding: 0.75rem 1rem;
             text-align: center;
-            font-weight: 700;
-            font-size: 0.875rem;
+            font-weight: 600;
+            font-size: 0.825rem;
+            letter-spacing: 0.025em;
         }
 
         td {
@@ -324,7 +364,7 @@ def generate_css():
 
         .bold-cell {
             font-weight: 600;
-            color: #2d3748;
+            color: #1a365d;
         }
 
         /* 热力图样式 */
@@ -348,7 +388,7 @@ def generate_css():
         }
 
         .heatmap-cell.excluded {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
             color: white;
             font-weight: 600;
         }
@@ -363,36 +403,42 @@ def generate_css():
 
         .kpi-card {
             background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-radius: 10px;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
             text-align: center;
-            border-top: 4px solid #667eea;
+            border-top: 3px solid #2b6cb0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
         }
 
         .kpi-value {
-            font-size: 2rem;
+            font-size: 1.75rem;
             font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 0.5rem;
+            color: #1a365d;
+            margin-bottom: 0.375rem;
         }
 
         .kpi-label {
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             color: #718096;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.375rem;
         }
 
         .kpi-delta {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             padding: 2px 8px;
-            border-radius: 12px;
+            border-radius: 10px;
             display: inline-block;
         }
 
-        .kpi-delta.positive { color: #38a169; background: #f0fff4; }
-        .kpi-delta.negative { color: #e53e3e; background: #fff5f5; }
+        .kpi-delta.positive { color: #276749; background: #c6f6d5; }
+        .kpi-delta.negative { color: #9b2c2c; background: #fed7d7; }
 
         /* 差异列箭头 */
         .diff-cell { font-weight: 600; }
@@ -429,42 +475,55 @@ def generate_css():
         /* 响应式设计 */
         @media (max-width: 1024px) {
             .sidebar {
-                width: 240px;
+                display: none;
             }
 
-            .content {
-                margin-left: 240px;
-                width: calc(100% - 240px);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                position: relative;
-                width: 100%;
-                height: auto;
-            }
-
-            .content {
-                margin-left: 0;
-                width: 100%;
-                padding: 1.5rem;
-            }
-        }
-
-        /* 打印样式 */
-        @media print {
-            .sidebar {
+            #sidebar-toggle {
                 display: none;
             }
 
             .content {
                 margin-left: 0;
-                width: 100%;
+                padding: 16px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 打印样式 */
+        @media print {
+            .sidebar, #sidebar-toggle {
+                display: none !important;
+            }
+
+            .content {
+                margin-left: 0;
+                max-width: 100%;
+                padding: 0;
             }
 
             section {
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
                 page-break-inside: avoid;
+            }
+
+            .kpi-card {
+                box-shadow: none;
+                border: 1px solid #e2e8f0;
+            }
+
+            @page {
+                margin: 1.5cm;
+                size: A4;
             }
         }
     </style>
@@ -475,6 +534,16 @@ def generate_javascript():
     """生成交互JavaScript"""
     return """
     <script>
+        // 侧栏折叠/展开
+        function toggleSidebar() {
+            const body = document.body;
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.getElementById('sidebar-toggle');
+            body.classList.toggle('sidebar-collapsed');
+            sidebar.classList.toggle('collapsed');
+            btn.innerHTML = body.classList.contains('sidebar-collapsed') ? '&#9654;' : '&#9664;';
+        }
+
         // 平滑滚动到锚点
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -974,7 +1043,7 @@ def generate_section3_1_place_analysis_html(df_ctrl, exclude_region, old_exclude
             • 交易占比：<strong>{format_percent(place_out_amt_ratio)}</strong><br>
             • 安全过件率：<strong>{format_percent(place_out_spr)}</strong><br>
             • CPS：<strong>{place_out_cps:.4f}</strong><br>
-            • 评价：新策略新增排除的客群质量较低，排除合���
+            • 评价：新策略新增排除的客群质量较低，排除合理
         </p>
 
         <p><strong>3. 合理性验证：</strong></p>
