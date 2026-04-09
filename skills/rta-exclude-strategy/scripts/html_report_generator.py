@@ -8,7 +8,7 @@ import numpy as np
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
-from utils import convert_old_rule_to_quantile, calc_spr, calc_cps
+from utils import convert_old_rule_to_quantile, calc_spr, calc_cps, make_region_mask, filter_by_region
 
 
 def generate_html_report(result, old_exclude_rule, output_path=None):
@@ -50,48 +50,6 @@ def generate_html_report(result, old_exclude_rule, output_path=None):
 
     print(f"\n报告已生成: {file_path}")
     return file_path
-
-
-# ============================================================================
-# 基础工具函数（复用 report_generator.py 的逻辑）
-# ============================================================================
-
-def convert_old_rule_to_quantile(old_exclude_rule):
-    """将老策略规则转换为聚合后的分位格式"""
-    def map_to_quantile(value):
-        if isinstance(value, str) and value.endswith('q'):
-            try:
-                num = int(value[:-1])
-                if 1 <= num <= 9:
-                    return '01Q'
-                elif 10 <= num <= 20:
-                    q_num = num - 8
-                    return f'{q_num:02d}Q'
-            except ValueError:
-                return None
-        return None
-
-    quantiles = set()
-    for rule in old_exclude_rule:
-        q = map_to_quantile(rule)
-        if q:
-            quantiles.add(q)
-
-    return sorted(list(quantiles))
-
-
-def calc_spr(df):
-    """计算安全过件率"""
-    if df['t3_ato'].sum() > 0:
-        return df['t3_safe_adt'].sum() / df['t3_ato'].sum()
-    return 0
-
-
-def calc_cps(df):
-    """计算CPS"""
-    if df['t3_loan_amt'].sum() > 0:
-        return df['cost'].sum() / df['t3_loan_amt'].sum()
-    return 0
 
 
 def format_percent(value):
@@ -587,14 +545,10 @@ def generate_section1_conclusion_html(df_ctrl, exclude_region, old_exclude_v8):
     old_remain_spr = calc_spr(old_remain_data_ctrl)
 
     # 新策略指标
-    new_exclude_data_ctrl = df_ctrl[df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
+    new_exclude_data_ctrl = filter_by_region(df_ctrl, exclude_region)
     new_exclude_amt_ratio = new_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
     new_exclude_spr = calc_spr(new_exclude_data_ctrl)
-    new_remain_data_ctrl = df_ctrl[~df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
+    new_remain_data_ctrl = df_ctrl[~make_region_mask(df_ctrl, exclude_region)]
     new_remain_spr = calc_spr(new_remain_data_ctrl)
 
     return f"""
@@ -730,16 +684,12 @@ def generate_section2_2_new_strategy_html(df_combined, df_ctrl, exclude_region, 
     old_remain_cps = calc_cps(old_remain_data_ctrl)
 
     # 新策略指标
-    new_exclude_data_ctrl = df_ctrl[df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
+    new_exclude_data_ctrl = filter_by_region(df_ctrl, exclude_region)
     new_exclude_expo_ratio = new_exclude_data_ctrl['expo_cnt'].sum() / total_ctrl_expo
     new_exclude_ato_ratio = new_exclude_data_ctrl['t3_ato'].sum() / total_ctrl_ato
     new_exclude_amt_ratio = new_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
     new_exclude_spr = calc_spr(new_exclude_data_ctrl)
-    new_remain_data_ctrl = df_ctrl[~df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
+    new_remain_data_ctrl = df_ctrl[~make_region_mask(df_ctrl, exclude_region)]
     new_remain_spr = calc_spr(new_remain_data_ctrl)
     new_remain_cps = calc_cps(new_remain_data_ctrl)
 
@@ -878,9 +828,7 @@ def generate_section3_1_place_analysis_html(df_ctrl, exclude_region, old_exclude
 
     # 计算四个客群
     df_ctrl['old_exclude'] = df_ctrl['V8_Q'].isin(old_exclude_v8)
-    df_ctrl['new_exclude'] = df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )
+    df_ctrl['new_exclude'] = make_region_mask(df_ctrl, exclude_region)
 
     only_old = df_ctrl[(df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]  # 置入客群
     only_new = df_ctrl[(~df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]  # 置出客群
@@ -933,9 +881,7 @@ def generate_section3_2_cross_tables_html(df_ctrl, exclude_region, old_exclude_v
 
     # 计算四个客群
     df_ctrl['old_exclude'] = df_ctrl['V8_Q'].isin(old_exclude_v8)
-    df_ctrl['new_exclude'] = df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )
+    df_ctrl['new_exclude'] = make_region_mask(df_ctrl, exclude_region)
 
     both_exclude = df_ctrl[(df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]
     only_old = df_ctrl[(df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]

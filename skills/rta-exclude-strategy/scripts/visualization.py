@@ -7,6 +7,7 @@
 import pandas as pd
 import numpy as np
 from typing import List, Tuple, Dict, Any
+from utils import make_region_mask
 
 
 # ============================================================================
@@ -613,9 +614,7 @@ def calculate_groups_data(df_ctrl: pd.DataFrame,
     # 标记老策略和新策略
     df_ctrl = df_ctrl.copy()
     df_ctrl['old_exclude'] = df_ctrl['V8_Q'].isin(old_exclude_v8)
-    df_ctrl['new_exclude'] = df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )
+    df_ctrl['new_exclude'] = make_region_mask(df_ctrl, exclude_region)
 
     # 分组
     both_exclude = df_ctrl[(df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]
@@ -688,18 +687,13 @@ def generate_full_html_report(result: Dict[str, Any],
     }
 
     # 新策略指标
-    new_exclude_data = df_ctrl[df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
+    new_exclude_data = df_ctrl[make_region_mask(df_ctrl, exclude_region)]
+    _remain_mask = ~make_region_mask(df_ctrl, exclude_region)
     new_metrics = {
         '排除交易占比': new_exclude_data['t3_loan_amt'].sum() / total_ctrl_amt,
         '排除客群安全过件率': calc_spr(new_exclude_data),
-        '保留客群安全过件率': calc_spr(df_ctrl[~df_ctrl.apply(
-            lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-        )]),
-        '保留客群CPS': calc_cps(df_ctrl[~df_ctrl.apply(
-            lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-        )])
+        '保留客群安全过件率': calc_spr(df_ctrl[_remain_mask]),
+        '保留客群CPS': calc_cps(df_ctrl[_remain_mask])
     }
 
     # 计算四个客群数据

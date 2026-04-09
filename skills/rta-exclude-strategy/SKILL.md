@@ -1,10 +1,19 @@
+---
+name: rta-exclude-strategy
+description: RTA排除策略分析技能 - 基于V8和V9RN双模型交叉分析的智能排除策略生成
+argument-hint: "--data_path <path> --ctrl_group_value <value> [options]"
+version: 1.1.0
+level: 3
+tags:
+  - data-analysis
+  - rta
+  - strategy
+  - chinese
+---
+
 # rta-exclude-strategy
 
 RTA排除策略分析技能 - 基于V8和V9RN双模型交叉分析的智能排除策略生成
-
-## Version
-
-1.1.0
 
 ## Description
 

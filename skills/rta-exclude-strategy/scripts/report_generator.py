@@ -10,7 +10,7 @@ from openpyxl.styles import Font, Alignment, PatternFill, numbers
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
-from utils import convert_old_rule_to_quantile, calc_spr, calc_cps
+from utils import convert_old_rule_to_quantile, calc_spr, calc_cps, make_region_mask, filter_by_region
 
 
 def generate_report(result, old_exclude_rule, output_path=None):
@@ -177,14 +177,10 @@ def generate_section1_conclusion(ws, current_row, df_ctrl, exclude_region, old_e
     old_remain_cps = calc_cps(old_remain_data_ctrl)
 
     # 新策略指标
-    new_exclude_data_ctrl = df_ctrl[df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
+    new_exclude_data_ctrl = filter_by_region(df_ctrl, exclude_region)
     new_exclude_amt_ratio = new_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
     new_exclude_spr = calc_spr(new_exclude_data_ctrl)
-    new_remain_data_ctrl = df_ctrl[~df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
+    new_remain_data_ctrl = df_ctrl[~make_region_mask(df_ctrl, exclude_region)]
     new_remain_spr = calc_spr(new_remain_data_ctrl)
     new_remain_cps = calc_cps(new_remain_data_ctrl)
 
@@ -361,16 +357,12 @@ def generate_section2_2_new_strategy(ws, current_row, df_combined, df_ctrl, excl
     old_remain_cps = calc_cps(old_remain_data_ctrl)
 
     # 新策略指标
-    new_exclude_data_ctrl = df_ctrl[df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
+    new_exclude_data_ctrl = filter_by_region(df_ctrl, exclude_region)
     new_exclude_expo_ratio = new_exclude_data_ctrl['expo_cnt'].sum() / total_ctrl_expo
     new_exclude_ato_ratio = new_exclude_data_ctrl['t3_ato'].sum() / total_ctrl_ato
     new_exclude_amt_ratio = new_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
     new_exclude_spr = calc_spr(new_exclude_data_ctrl)
-    new_remain_data_ctrl = df_ctrl[~df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
+    new_remain_data_ctrl = df_ctrl[~make_region_mask(df_ctrl, exclude_region)]
     new_remain_spr = calc_spr(new_remain_data_ctrl)
     new_remain_cps = calc_cps(new_remain_data_ctrl)
 
@@ -549,9 +541,7 @@ def generate_section3_1_place_analysis(ws, current_row, df_ctrl, exclude_region,
 
     # 计算四个客群
     df_ctrl['old_exclude'] = df_ctrl['V8_Q'].isin(old_exclude_v8)
-    df_ctrl['new_exclude'] = df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )
+    df_ctrl['new_exclude'] = make_region_mask(df_ctrl, exclude_region)
 
     both_exclude = df_ctrl[(df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]
     only_old = df_ctrl[(df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]  # 置入客群
@@ -614,9 +604,7 @@ def generate_section3_2_cross_tables(ws, current_row, df_ctrl, exclude_region, o
 
     # 计算四个客群
     df_ctrl['old_exclude'] = df_ctrl['V8_Q'].isin(old_exclude_v8)
-    df_ctrl['new_exclude'] = df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )
+    df_ctrl['new_exclude'] = make_region_mask(df_ctrl, exclude_region)
 
     both_exclude = df_ctrl[(df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]
     only_old = df_ctrl[(df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]
