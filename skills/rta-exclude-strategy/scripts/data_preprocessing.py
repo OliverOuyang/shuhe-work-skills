@@ -161,33 +161,28 @@ def aggregate_model_groups(df):
     Returns:
         DataFrame: 聚合后的数据
     """
-    def map_to_quantile(value):
-        """将01q-20q映射到01Q-12Q"""
-        if pd.isna(value) or value == 'UNK':
-            return 'UNK'
-
-        # 提取数字部分
-        if isinstance(value, str) and value.endswith('q'):
-            try:
-                num = int(value[:-1])
-                if 1 <= num <= 9:
-                    return '01Q'
-                elif 10 <= num <= 20:
-                    q_num = num - 8
-                    return f'{q_num:02d}Q'
-            except ValueError:
-                return 'UNK'
-
-        return 'UNK'
+    def _vectorized_map(series):
+        """将01q-20q向量化映射到01Q-12Q"""
+        # 提取数字部分（仅匹配以 q 结尾的字符串）
+        num = series.str.extract(r'^(\d+)q$', expand=False).astype(float)
+        # 1-9 → '01Q'；10-20 → '{num-8:02d}Q'；其余 → 'UNK'
+        q_label = np.where(
+            (num >= 10) & (num <= 20),
+            (num - 8).astype('Int64').astype(str).str.zfill(2) + 'Q',
+            np.where((num >= 1) & (num <= 9), '01Q', 'UNK')
+        )
+        # NaN / 'UNK' 原值保持 'UNK'
+        return np.where(series.isna() | (series == 'UNK') | (num.isna() & (series != 'UNK')),
+                        'UNK', q_label)
 
     # 聚合V8
     if 'V8' in df.columns:
-        df['V8_Q'] = df['V8'].apply(map_to_quantile)
+        df['V8_Q'] = _vectorized_map(df['V8'].astype(str).where(df['V8'].notna(), other=np.nan))
         print(f"  V8聚合完成: {df['V8'].nunique()} 个分组 → {df['V8_Q'].nunique()} 个分组")
 
     # 聚合V9RN
     if 'V9RN' in df.columns:
-        df['V9RN_Q'] = df['V9RN'].apply(map_to_quantile)
+        df['V9RN_Q'] = _vectorized_map(df['V9RN'].astype(str).where(df['V9RN'].notna(), other=np.nan))
         print(f"  V9RN聚合完成: {df['V9RN'].nunique()} 个分组 → {df['V9RN_Q'].nunique()} 个分组")
 
     return df

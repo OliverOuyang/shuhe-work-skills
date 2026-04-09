@@ -9,6 +9,12 @@ from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
 from utils import convert_old_rule_to_quantile, calc_spr, calc_cps, make_region_mask, filter_by_region
+from metrics import (
+    calc_comparison_metrics,
+    calc_four_segments,
+    calc_segment_amt_ratios,
+    calc_v8_spr_table,
+)
 
 
 def generate_html_report(result, old_exclude_rule, output_path=None):
@@ -79,6 +85,7 @@ def generate_html_structure(df_combined, df_ctrl, exclude_region, old_exclude_v8
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RTA排除策略分析报告</title>
     {generate_css()}
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -640,23 +647,16 @@ def generate_section1_conclusion_html(df_ctrl, exclude_region, old_exclude_v8):
     """生成第一部分HTML：核心结论"""
 
     # 计算指标
-    total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
-
-    # 老策略指标
-    old_exclude_data_ctrl = df_ctrl[df_ctrl['V8_Q'].isin(old_exclude_v8)]
-    old_exclude_amt_ratio = old_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
-    old_exclude_spr = calc_spr(old_exclude_data_ctrl)
-    old_remain_data_ctrl = df_ctrl[~df_ctrl['V8_Q'].isin(old_exclude_v8)]
-    old_remain_spr = calc_spr(old_remain_data_ctrl)
-    old_remain_cps = calc_cps(old_remain_data_ctrl)
-
-    # 新策略指标
-    new_exclude_data_ctrl = filter_by_region(df_ctrl, exclude_region)
-    new_exclude_amt_ratio = new_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
-    new_exclude_spr = calc_spr(new_exclude_data_ctrl)
-    new_remain_data_ctrl = df_ctrl[~make_region_mask(df_ctrl, exclude_region)]
-    new_remain_spr = calc_spr(new_remain_data_ctrl)
-    new_remain_cps = calc_cps(new_remain_data_ctrl)
+    m = calc_comparison_metrics(df_ctrl, exclude_region, old_exclude_v8)
+    total_ctrl_amt = m['total_ctrl_amt']
+    old_exclude_amt_ratio = m['old_exclude_amt_ratio']
+    old_exclude_spr = m['old_exclude_spr']
+    old_remain_spr = m['old_remain_spr']
+    old_remain_cps = m['old_remain_cps']
+    new_exclude_amt_ratio = m['new_exclude_amt_ratio']
+    new_exclude_spr = m['new_exclude_spr']
+    new_remain_spr = m['new_remain_spr']
+    new_remain_cps = m['new_remain_cps']
 
     # KPI差异计算
     amt_ratio_diff = new_exclude_amt_ratio - old_exclude_amt_ratio
@@ -764,12 +764,7 @@ def generate_section2_1_old_strategy_html(df_combined, old_exclude_v8):
     """生成2.1：排除策略现状（老策略）"""
 
     # 计算V8各分位的安全过件率
-    v8_list = [f'{i:02d}Q' for i in range(1, 13)]
-    v8_stats_all = df_combined.groupby('V8_Q').agg({
-        't3_ato': 'sum',
-        't3_safe_adt': 'sum'
-    }).reset_index()
-    v8_stats_all['安全过件率'] = v8_stats_all['t3_safe_adt'] / v8_stats_all['t3_ato']
+    v8_stats_all, v8_list = calc_v8_spr_table(df_combined)
 
     # 生成表格行
     table_rows = ""
@@ -814,29 +809,22 @@ def generate_section2_2_new_strategy_html(df_combined, df_ctrl, exclude_region, 
     """生成2.2：排除策略制定（新策略）"""
 
     # 计算指标
-    total_ctrl_expo = df_ctrl['expo_cnt'].sum()
-    total_ctrl_ato = df_ctrl['t3_ato'].sum()
-    total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
-
-    # 老策略指标
-    old_exclude_data_ctrl = df_ctrl[df_ctrl['V8_Q'].isin(old_exclude_v8)]
-    old_exclude_expo_ratio = old_exclude_data_ctrl['expo_cnt'].sum() / total_ctrl_expo
-    old_exclude_ato_ratio = old_exclude_data_ctrl['t3_ato'].sum() / total_ctrl_ato
-    old_exclude_amt_ratio = old_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
-    old_exclude_spr = calc_spr(old_exclude_data_ctrl)
-    old_remain_data_ctrl = df_ctrl[~df_ctrl['V8_Q'].isin(old_exclude_v8)]
-    old_remain_spr = calc_spr(old_remain_data_ctrl)
-    old_remain_cps = calc_cps(old_remain_data_ctrl)
-
-    # 新策略指标
-    new_exclude_data_ctrl = filter_by_region(df_ctrl, exclude_region)
-    new_exclude_expo_ratio = new_exclude_data_ctrl['expo_cnt'].sum() / total_ctrl_expo
-    new_exclude_ato_ratio = new_exclude_data_ctrl['t3_ato'].sum() / total_ctrl_ato
-    new_exclude_amt_ratio = new_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
-    new_exclude_spr = calc_spr(new_exclude_data_ctrl)
-    new_remain_data_ctrl = df_ctrl[~make_region_mask(df_ctrl, exclude_region)]
-    new_remain_spr = calc_spr(new_remain_data_ctrl)
-    new_remain_cps = calc_cps(new_remain_data_ctrl)
+    m = calc_comparison_metrics(df_ctrl, exclude_region, old_exclude_v8)
+    total_ctrl_expo = m['total_ctrl_expo']
+    total_ctrl_ato = m['total_ctrl_ato']
+    total_ctrl_amt = m['total_ctrl_amt']
+    old_exclude_expo_ratio = m['old_exclude_expo_ratio']
+    old_exclude_ato_ratio = m['old_exclude_ato_ratio']
+    old_exclude_amt_ratio = m['old_exclude_amt_ratio']
+    old_exclude_spr = m['old_exclude_spr']
+    old_remain_spr = m['old_remain_spr']
+    old_remain_cps = m['old_remain_cps']
+    new_exclude_expo_ratio = m['new_exclude_expo_ratio']
+    new_exclude_ato_ratio = m['new_exclude_ato_ratio']
+    new_exclude_amt_ratio = m['new_exclude_amt_ratio']
+    new_exclude_spr = m['new_exclude_spr']
+    new_remain_spr = m['new_remain_spr']
+    new_remain_cps = m['new_remain_cps']
 
     # 指标对比表
     metrics = [
@@ -874,6 +862,7 @@ def generate_section2_2_new_strategy_html(df_combined, df_ctrl, exclude_region, 
 
     # 生成热力图
     heatmap_html = generate_heatmap_html(df_combined, exclude_region)
+    diff_heatmap_html = generate_diff_heatmap_html(df_combined, exclude_region, old_exclude_v8)
 
     return f"""
     <h2>2. 排除策略制定</h2>
@@ -899,6 +888,10 @@ def generate_section2_2_new_strategy_html(df_combined, df_ctrl, exclude_region, 
     <h3>2）排除规则："安全过件率低于10%客群"</h3>
     <h4>表2：新策略排除规则（V8 x V9RN二维）</h4>
     {heatmap_html}
+
+    <h3>3）新旧策略差异对比</h3>
+    <h4>图3：置入置出差异热力图（V8 x V9RN二维）</h4>
+    {diff_heatmap_html}
     """
 
 
@@ -919,7 +912,7 @@ def _spr_to_color(spr, min_spr, max_spr):
 
 
 def generate_heatmap_html(df_combined, exclude_region):
-    """生成V8 x V9RN二维热力图"""
+    """生成V8 x V9RN二维热力图（ECharts交互版 + 表格版）"""
 
     v8_list = [f'{i:02d}Q' for i in range(1, 13)]
     v9_list = [f'{i:02d}Q' for i in range(1, 13)]
@@ -939,6 +932,167 @@ def generate_heatmap_html(df_combined, exclude_region):
     min_spr = min(all_spr_values) if all_spr_values else 0
     max_spr = max(all_spr_values) if all_spr_values else 1
 
+    # ---- ECharts data ----
+    # Build series data: [v9_index, v8_index, spr_pct, is_excluded]
+    echarts_data = []
+    excluded_data = []
+    for v8_idx, v8 in enumerate(v8_list):
+        for v9_idx, v9 in enumerate(v9_list):
+            is_excluded = (v8, v9) in exclude_region
+            spr_val = cell_spr_map.get((v8, v9), None)
+            spr_pct = round(spr_val * 100, 2) if spr_val is not None else None
+            if is_excluded:
+                excluded_data.append([v9_idx, v8_idx, spr_pct if spr_pct is not None else -1])
+            else:
+                if spr_pct is not None:
+                    echarts_data.append([v9_idx, v8_idx, spr_pct])
+
+    # Find excluded region bounding box for markArea (contiguous rectangle is not guaranteed,
+    # so we draw one markArea rect per excluded cell)
+    mark_area_data = []
+    for (v8, v9) in exclude_region:
+        if v8 in v8_list and v9 in v9_list:
+            v9_idx = v9_list.index(v9)
+            v8_idx = v8_list.index(v8)
+            mark_area_data.append([
+                {"xAxis": v9_idx - 0.5, "yAxis": v8_idx - 0.5},
+                {"xAxis": v9_idx + 0.5, "yAxis": v8_idx + 0.5}
+            ])
+
+    import json
+    echarts_data_json = json.dumps(echarts_data)
+    excluded_data_json = json.dumps(excluded_data)
+    v8_labels_json = json.dumps(v8_list)
+    v9_labels_json = json.dumps(v9_list)
+    mark_area_json = json.dumps(mark_area_data)
+
+    echarts_chart_id = "heatmap_echarts_spr"
+
+    echarts_html = f"""
+    <div style="margin: 1.5rem 0;">
+        <p style="font-size:0.85rem; color:#718096; margin-bottom:0.5rem;">
+            交互式热力图（鼠标悬停查看详情，红色区域为排除区域）
+        </p>
+        <div id="{echarts_chart_id}" style="width:100%; height:500px;"></div>
+    </div>
+    <script>
+    (function() {{
+        var chartDom = document.getElementById('{echarts_chart_id}');
+        var myChart = echarts.init(chartDom);
+
+        var v8Labels = {v8_labels_json};
+        var v9Labels = {v9_labels_json};
+        var normalData = {echarts_data_json};
+        var excludedData = {excluded_data_json};
+        var markAreaData = {mark_area_json};
+
+        var option = {{
+            tooltip: {{
+                position: 'top',
+                formatter: function(params) {{
+                    var v9 = v9Labels[params.data[0]];
+                    var v8 = v8Labels[params.data[1]];
+                    var spr = params.data[2];
+                    var isExcluded = params.seriesName === '排除区域';
+                    var sprText = (spr === -1 || spr === null) ? 'N/A' : spr.toFixed(2) + '%';
+                    return 'V8: ' + v8 + '<br/>V9RN: ' + v9 +
+                           '<br/>SPR: ' + sprText +
+                           '<br/>状态: ' + (isExcluded ? '<span style="color:#e53e3e;font-weight:600;">已排除</span>' : '保留');
+                }}
+            }},
+            grid: {{
+                left: '80px',
+                right: '120px',
+                top: '30px',
+                bottom: '60px'
+            }},
+            xAxis: {{
+                type: 'category',
+                data: v9Labels,
+                name: 'V9RN',
+                nameLocation: 'middle',
+                nameGap: 35,
+                axisLabel: {{ fontSize: 11 }},
+                splitArea: {{ show: true }}
+            }},
+            yAxis: {{
+                type: 'category',
+                data: v8Labels,
+                name: 'V8',
+                nameLocation: 'middle',
+                nameGap: 50,
+                axisLabel: {{ fontSize: 11 }},
+                splitArea: {{ show: true }}
+            }},
+            visualMap: {{
+                type: 'piecewise',
+                pieces: [
+                    {{ max: 5,  label: '≤5%',    color: '#b2182b' }},
+                    {{ min: 5,  max: 10, label: '5–10%',  color: '#ef8a62' }},
+                    {{ min: 10, max: 15, label: '10–15%', color: '#fddbc7' }},
+                    {{ min: 15, max: 20, label: '15–20%', color: '#d1e5f0' }},
+                    {{ min: 20, label: '>20%',   color: '#2166ac' }}
+                ],
+                orient: 'vertical',
+                right: 10,
+                top: 'center',
+                textStyle: {{ fontSize: 11 }},
+                dimension: 2,
+                seriesIndex: 0
+            }},
+            series: [
+                {{
+                    name: '安全过件率',
+                    type: 'heatmap',
+                    data: normalData,
+                    label: {{
+                        show: true,
+                        fontSize: 9,
+                        formatter: function(params) {{
+                            return params.data[2] !== null ? params.data[2].toFixed(1) + '%' : '';
+                        }}
+                    }},
+                    emphasis: {{
+                        itemStyle: {{ shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' }}
+                    }}
+                }},
+                {{
+                    name: '排除区域',
+                    type: 'heatmap',
+                    data: excludedData,
+                    itemStyle: {{ color: '#e53e3e' }},
+                    label: {{
+                        show: true,
+                        fontSize: 9,
+                        color: '#fff',
+                        formatter: function(params) {{
+                            return params.data[2] === -1 ? '排除' :
+                                   params.data[2].toFixed(1) + '%';
+                        }}
+                    }},
+                    emphasis: {{
+                        itemStyle: {{ shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)' }}
+                    }},
+                    markArea: {{
+                        silent: true,
+                        itemStyle: {{
+                            color: 'transparent',
+                            borderColor: '#555',
+                            borderWidth: 2,
+                            borderType: 'dashed'
+                        }},
+                        data: markAreaData
+                    }}
+                }}
+            ]
+        }};
+        myChart.setOption(option);
+        window.addEventListener('resize', function() {{ myChart.resize(); }});
+    }})();
+    </script>
+    """
+
+    # ---- Existing table heatmap ----
     # 表头
     header_cells = "".join([f'<th>{v9}</th>' for v9 in v9_list])
 
@@ -962,7 +1116,7 @@ def generate_heatmap_html(df_combined, exclude_region):
 
         data_rows += f"<tr>{row_cells}</tr>"
 
-    return f"""
+    table_html = f"""
     <div class="heatmap-container">
         <table class="heatmap-table">
             <thead>
@@ -976,6 +1130,139 @@ def generate_heatmap_html(df_combined, exclude_region):
             </tbody>
         </table>
     </div>
+    """
+
+    return echarts_html + table_html
+
+
+def generate_diff_heatmap_html(df_combined, exclude_region, old_exclude_v8):
+    """生成新旧策略差异热力图（ECharts版）
+
+    颜色编码：
+      - 双排除（both exclude）：深灰 #999999
+      - 置入（old排除, new保留）：蓝色 #2166ac
+      - 置出（new排除, old保留）：橙色 #fc8d59
+      - 双保留（both keep）：浅灰 #e0e0e0
+    """
+    import json
+
+    v8_list = [f'{i:02d}Q' for i in range(1, 13)]
+    v9_list = [f'{i:02d}Q' for i in range(1, 13)]
+
+    # category codes: 0=both_keep, 1=place_in(old only), 2=place_out(new only), 3=both_exclude
+    COLOR_MAP = {0: '#e0e0e0', 1: '#2166ac', 2: '#fc8d59', 3: '#999999'}
+    LABEL_MAP = {0: '双保留', 1: '置入', 2: '置出', 3: '双排除'}
+
+    series_data = []
+    for v8_idx, v8 in enumerate(v8_list):
+        for v9_idx, v9 in enumerate(v9_list):
+            old_excl = v8 in old_exclude_v8
+            new_excl = (v8, v9) in exclude_region
+            if old_excl and new_excl:
+                cat = 3
+            elif old_excl and not new_excl:
+                cat = 1
+            elif not old_excl and new_excl:
+                cat = 2
+            else:
+                cat = 0
+            series_data.append([v9_idx, v8_idx, cat])
+
+    series_data_json = json.dumps(series_data)
+    v8_labels_json = json.dumps(v8_list)
+    v9_labels_json = json.dumps(v9_list)
+
+    chart_id = "heatmap_echarts_diff"
+
+    return f"""
+    <div style="margin: 1.5rem 0;">
+        <p style="font-size:0.85rem; color:#718096; margin-bottom:0.5rem;">
+            新旧策略差异热力图（蓝=置入，橙=置出，灰=双排除，浅灰=双保留）
+        </p>
+        <div id="{chart_id}" style="width:100%; height:500px;"></div>
+    </div>
+    <script>
+    (function() {{
+        var chartDom = document.getElementById('{chart_id}');
+        var myChart = echarts.init(chartDom);
+
+        var v8Labels = {v8_labels_json};
+        var v9Labels = {v9_labels_json};
+        var rawData = {series_data_json};
+
+        var colorMap = {{'0': '#e0e0e0', '1': '#2166ac', '2': '#fc8d59', '3': '#999999'}};
+        var labelMap = {{'0': '双保留', '1': '置入', '2': '置出', '3': '双排除'}};
+
+        // Split into 4 series so each gets a fixed color and legend entry
+        var seriesGroups = {{'0': [], '1': [], '2': [], '3': []}};
+        rawData.forEach(function(d) {{
+            seriesGroups[String(d[2])].push(d);
+        }});
+
+        var seriesList = ['0','1','2','3'].map(function(cat) {{
+            return {{
+                name: labelMap[cat],
+                type: 'heatmap',
+                data: seriesGroups[cat],
+                itemStyle: {{ color: colorMap[cat] }},
+                label: {{
+                    show: cat !== '0',
+                    fontSize: 9,
+                    color: cat === '0' ? '#999' : '#fff',
+                    formatter: function(params) {{ return labelMap[String(params.data[2])]; }}
+                }},
+                emphasis: {{
+                    itemStyle: {{ shadowBlur: 8, shadowColor: 'rgba(0,0,0,0.4)' }}
+                }}
+            }};
+        }});
+
+        var option = {{
+            tooltip: {{
+                position: 'top',
+                formatter: function(params) {{
+                    var v9 = v9Labels[params.data[0]];
+                    var v8 = v8Labels[params.data[1]];
+                    var cat = params.data[2];
+                    return 'V8: ' + v8 + '<br/>V9RN: ' + v9 +
+                           '<br/>状态: <strong>' + labelMap[String(cat)] + '</strong>';
+                }}
+            }},
+            legend: {{
+                data: ['双保留', '置入', '置出', '双排除'],
+                top: 5,
+                textStyle: {{ fontSize: 11 }}
+            }},
+            grid: {{
+                left: '80px',
+                right: '20px',
+                top: '50px',
+                bottom: '60px'
+            }},
+            xAxis: {{
+                type: 'category',
+                data: v9Labels,
+                name: 'V9RN',
+                nameLocation: 'middle',
+                nameGap: 35,
+                axisLabel: {{ fontSize: 11 }},
+                splitArea: {{ show: true }}
+            }},
+            yAxis: {{
+                type: 'category',
+                data: v8Labels,
+                name: 'V8',
+                nameLocation: 'middle',
+                nameGap: 50,
+                axisLabel: {{ fontSize: 11 }},
+                splitArea: {{ show: true }}
+            }},
+            series: seriesList
+        }};
+        myChart.setOption(option);
+        window.addEventListener('resize', function() {{ myChart.resize(); }});
+    }})();
+    </script>
     """
 
 
@@ -1008,11 +1295,9 @@ def generate_section3_1_place_analysis_html(df_ctrl, exclude_region, old_exclude
     """生成3.1：置入置出合理性分析"""
 
     # 计算四个客群
-    df_ctrl['old_exclude'] = df_ctrl['V8_Q'].isin(old_exclude_v8)
-    df_ctrl['new_exclude'] = make_region_mask(df_ctrl, exclude_region)
-
-    only_old = df_ctrl[(df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]  # 置入客群
-    only_new = df_ctrl[(~df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]  # 置出客群
+    segs = calc_four_segments(df_ctrl, exclude_region, old_exclude_v8)
+    only_old = segs['only_old']  # 置入客群
+    only_new = segs['only_new']  # 置出客群
 
     # 计算指标
     total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
@@ -1061,19 +1346,18 @@ def generate_section3_2_cross_tables_html(df_ctrl, exclude_region, old_exclude_v
     """生成3.2：交叉表展示"""
 
     # 计算四个客群
-    df_ctrl['old_exclude'] = df_ctrl['V8_Q'].isin(old_exclude_v8)
-    df_ctrl['new_exclude'] = make_region_mask(df_ctrl, exclude_region)
-
-    both_exclude = df_ctrl[(df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]
-    only_old = df_ctrl[(df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]
-    only_new = df_ctrl[(~df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]
-    both_keep = df_ctrl[(~df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]
+    segs = calc_four_segments(df_ctrl, exclude_region, old_exclude_v8)
+    both_exclude = segs['both_exclude']
+    only_old = segs['only_old']
+    only_new = segs['only_new']
+    both_keep = segs['both_keep']
 
     total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
 
     # 计算新老策略的排除交易占比
-    new_exclude_amt_ratio = (both_exclude['t3_loan_amt'].sum() + only_new['t3_loan_amt'].sum()) / total_ctrl_amt
-    old_exclude_amt_ratio = (both_exclude['t3_loan_amt'].sum() + only_old['t3_loan_amt'].sum()) / total_ctrl_amt
+    new_exclude_amt_ratio, old_exclude_amt_ratio = calc_segment_amt_ratios(
+        both_exclude, only_old, only_new, total_ctrl_amt
+    )
 
     # 生成三个交叉表
     table1_html = generate_cross_table_amt_html(both_exclude, only_old, only_new, both_keep,

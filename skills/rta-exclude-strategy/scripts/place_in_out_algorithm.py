@@ -513,11 +513,12 @@ def step5_validate_constraints(df_ctrl, exclude_region, max_exclude_ratio):
 
 
 def adjust_threshold(df_combined, df_ctrl, initial_region, place_in_region,
-                     j, spr_threshold, max_exclude_ratio, max_iterations=10):
+                     j, spr_threshold, max_exclude_ratio, max_iterations=20):
     """
-    调整阈值以满足约束条件
+    二分搜索调整阈值以满足约束条件
 
-    如果排除交易占比超过最大值，降低置出阈值重新执行
+    如果排除交易占比超过最大值，通过二分搜索降低置出阈值重新执行
+    相比线性缩减(0.9x)，二分搜索收敛更快且更精确
 
     Args:
         df_combined: 全量数据
@@ -533,32 +534,48 @@ def adjust_threshold(df_combined, df_ctrl, initial_region, place_in_region,
         tuple: (exclude_region, place_out_region)
     """
     print("\n" + "="*100)
-    print("调整阈值以满足约束条件")
+    print("二分搜索调整阈值以满足约束条件")
     print("="*100)
 
-    current_threshold = spr_threshold
     total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
 
+    lo = 0.0
+    hi = spr_threshold
+    best_exclude = None
+    best_place_out = None
+
     for iteration in range(max_iterations):
-        # 降低阈值
-        current_threshold = current_threshold * 0.9
-        print(f"\n迭代{iteration+1}: 调整置出阈值为 {current_threshold*100:.2f}%")
+        mid = (lo + hi) / 2
+        print(f"\n迭代{iteration+1}: 阈值={mid*100:.3f}% (范围: [{lo*100:.3f}%, {hi*100:.3f}%])")
 
-        # 重新执行置出
-        place_out_region = step3_place_out(df_combined, j, current_threshold)
-
-        # 计算最终排除区域
+        place_out_region = step3_place_out(df_combined, j, mid)
         exclude_region = list((set(initial_region) - set(place_in_region)) | set(place_out_region))
 
-        # 验证约束
         exclude_ctrl = filter_by_region(df_ctrl, set(exclude_region))
         exclude_ctrl_ratio = exclude_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
 
         print(f"  排除交易占比: {exclude_ctrl_ratio*100:.2f}%")
 
         if exclude_ctrl_ratio <= max_exclude_ratio:
-            print(f"  [SUCCESS] 满足约束条件")
-            return exclude_region, place_out_region
+            best_exclude = exclude_region
+            best_place_out = place_out_region
+            lo = mid
+            print(f"  [OK] 满足约束，尝试扩大排除区域")
+            if max_exclude_ratio - exclude_ctrl_ratio < 0.005:
+                print(f"  [EARLY STOP] 接近约束上限，终止搜索")
+                break
+        else:
+            hi = mid
+            print(f"  [OVER] 超出约束，缩小排除区域")
 
-    print(f"\n[WARNING] ���到最大迭代次数，仍无法满足约束条件")
-    return exclude_region, place_out_region
+        if hi - lo < 0.001:
+            print(f"\n[CONVERGED] 阈值收敛于 {mid*100:.3f}%")
+            break
+
+    if best_exclude is not None:
+        print(f"\n[SUCCESS] 找到满足约束的最优阈值")
+        return best_exclude, best_place_out
+
+    print(f"\n[WARNING] 无法找到满足约束的阈值，返回无置出结果")
+    exclude_region = list(set(initial_region) - set(place_in_region))
+    return exclude_region, []
