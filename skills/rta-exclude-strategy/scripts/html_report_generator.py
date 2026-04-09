@@ -158,6 +158,8 @@ def generate_css():
         .logo h2 {
             font-size: 1.5rem;
             margin-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 1rem;
         }
 
         .timestamp {
@@ -224,7 +226,7 @@ def generate_css():
         section {
             background: white;
             border-radius: 12px;
-            padding: 2.5rem;
+            padding: 2rem 3rem;
             margin-bottom: 2rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
@@ -235,6 +237,7 @@ def generate_css():
             margin-bottom: 2rem;
             padding-bottom: 1rem;
             border-bottom: 3px solid #667eea;
+            letter-spacing: -0.5px;
         }
 
         h2 {
@@ -251,10 +254,11 @@ def generate_css():
 
         .conclusion-text {
             background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
-            padding: 2rem;
+            padding: 1.5rem 2rem;
             border-radius: 10px;
             border-left: 4px solid #667eea;
             margin: 1.5rem 0;
+            font-size: 0.95rem;
         }
 
         .conclusion-text p {
@@ -290,8 +294,8 @@ def generate_css():
         th {
             padding: 1rem;
             text-align: center;
-            font-weight: 600;
-            font-size: 0.95rem;
+            font-weight: 700;
+            font-size: 0.875rem;
         }
 
         td {
@@ -349,20 +353,52 @@ def generate_css():
             font-weight: 600;
         }
 
-        .heatmap-cell.high {
-            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
-            color: white;
+        /* KPI卡片 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .heatmap-cell.medium {
-            background: linear-gradient(135deg, #ffd43b 0%, #fab005 100%);
-            color: #333;
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: center;
+            border-top: 4px solid #667eea;
         }
 
-        .heatmap-cell.low {
-            background: linear-gradient(135deg, #ffa94d 0%, #ff8c42 100%);
-            color: white;
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
         }
+
+        .kpi-label {
+            font-size: 0.875rem;
+            color: #718096;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-delta {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        .kpi-delta.positive { color: #38a169; background: #f0fff4; }
+        .kpi-delta.negative { color: #e53e3e; background: #fff5f5; }
+
+        /* 差异列箭头 */
+        .diff-cell { font-weight: 600; }
+        .diff-cell.positive { color: #38a169; }
+        .diff-cell.negative { color: #e53e3e; }
+        .diff-arrow { font-size: 1.1em; margin-right: 4px; }
 
         /* 排序功能 */
         .sortable {
@@ -543,6 +579,7 @@ def generate_section1_conclusion_html(df_ctrl, exclude_region, old_exclude_v8):
     old_exclude_spr = calc_spr(old_exclude_data_ctrl)
     old_remain_data_ctrl = df_ctrl[~df_ctrl['V8_Q'].isin(old_exclude_v8)]
     old_remain_spr = calc_spr(old_remain_data_ctrl)
+    old_remain_cps = calc_cps(old_remain_data_ctrl)
 
     # 新策略指标
     new_exclude_data_ctrl = filter_by_region(df_ctrl, exclude_region)
@@ -550,10 +587,49 @@ def generate_section1_conclusion_html(df_ctrl, exclude_region, old_exclude_v8):
     new_exclude_spr = calc_spr(new_exclude_data_ctrl)
     new_remain_data_ctrl = df_ctrl[~make_region_mask(df_ctrl, exclude_region)]
     new_remain_spr = calc_spr(new_remain_data_ctrl)
+    new_remain_cps = calc_cps(new_remain_data_ctrl)
+
+    # KPI差异计算
+    amt_ratio_diff = new_exclude_amt_ratio - old_exclude_amt_ratio
+    spr_lift = (new_remain_spr - old_remain_spr) * 100
+    exclude_spr_diff = new_exclude_spr - old_exclude_spr
+    cps_diff = new_remain_cps - old_remain_cps
+
+    amt_delta_class = 'positive' if amt_ratio_diff > 0 else 'negative'
+    amt_delta_sign = '+' if amt_ratio_diff > 0 else ''
+    spr_delta_class = 'positive' if spr_lift > 0 else 'negative'
+    spr_delta_sign = '+' if spr_lift > 0 else ''
+    ex_spr_delta_class = 'negative' if exclude_spr_diff < 0 else 'positive'
+    ex_spr_delta_sign = '+' if exclude_spr_diff >= 0 else ''
+    cps_delta_class = 'positive' if cps_diff > 0 else 'negative'
+    cps_delta_sign = '+' if cps_diff > 0 else ''
 
     return f"""
     <section id="section1">
         <h1>一、核心结论：关键指标对比（旧策略 vs 新策略）</h1>
+
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-value">{format_percent(new_exclude_amt_ratio)}</div>
+                <div class="kpi-label">新策略排除交易占比</div>
+                <div class="kpi-delta {amt_delta_class}">{'↑' if amt_ratio_diff > 0 else '↓'} 较旧策略 {amt_delta_sign}{amt_ratio_diff*100:.2f}%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">{format_percent(new_remain_spr)}</div>
+                <div class="kpi-label">保留客群SPR</div>
+                <div class="kpi-delta {spr_delta_class}">{'↑' if spr_lift > 0 else '↓'} 较旧策略 {spr_delta_sign}{spr_lift:.2f}pct</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">{format_percent(new_exclude_spr)}</div>
+                <div class="kpi-label">排除客群SPR</div>
+                <div class="kpi-delta {ex_spr_delta_class}">{'↑' if exclude_spr_diff >= 0 else '↓'} 较旧策略 {ex_spr_delta_sign}{exclude_spr_diff*100:.2f}%</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">{new_remain_cps:.4f}</div>
+                <div class="kpi-label">保留客群CPS</div>
+                <div class="kpi-delta {cps_delta_class}">{'↑' if cps_diff > 0 else '↓'} 较旧策略 {cps_delta_sign}{cps_diff:.4f}</div>
+            </div>
+        </div>
 
         <div class="conclusion-text">
             <p><strong>1. 新策略显著提升保留客群质量</strong></p>
@@ -706,12 +782,24 @@ def generate_section2_2_new_strategy_html(df_combined, df_ctrl, exclude_region, 
     metrics_rows = ""
     for metric_name, old_val, new_val in metrics:
         diff_val = new_val - old_val
+        if abs(diff_val) < 0.0001:
+            arrow = '→'
+            diff_class = ''
+        elif diff_val > 0:
+            arrow = '↑'
+            diff_class = 'positive' if '安全过件率' in metric_name else ''
+        else:
+            arrow = '↓'
+            diff_class = 'negative' if '安全过件率' in metric_name else ''
+
         metrics_rows += f"""
         <tr>
             <td style="text-align: left;">{metric_name}</td>
             <td>{format_number(old_val)}</td>
             <td>{format_number(new_val)}</td>
-            <td>{format_number(abs(diff_val))}</td>
+            <td class="diff-cell {diff_class}">
+                <span class="diff-arrow">{arrow}</span> {format_number(abs(diff_val))}
+            </td>
         </tr>
         """
 
@@ -745,11 +833,42 @@ def generate_section2_2_new_strategy_html(df_combined, df_ctrl, exclude_region, 
     """
 
 
+def _spr_to_color(spr, min_spr, max_spr):
+    """SPR值映射到连续色阶（红→黄→绿）"""
+    if max_spr == min_spr:
+        return '#ffd43b'
+    ratio = (spr - min_spr) / (max_spr - min_spr)
+    if ratio < 0.5:
+        r = 255
+        g = int(180 + 150 * (ratio / 0.5))
+        b = int(50 + 50 * (ratio / 0.5))
+    else:
+        r = int(255 - 200 * ((ratio - 0.5) / 0.5))
+        g = int(200 + 55 * ((ratio - 0.5) / 0.5))
+        b = int(50 + 50 * ((ratio - 0.5) / 0.5))
+    return f'rgb({r},{g},{b})'
+
+
 def generate_heatmap_html(df_combined, exclude_region):
     """生成V8 x V9RN二维热力图"""
 
     v8_list = [f'{i:02d}Q' for i in range(1, 13)]
     v9_list = [f'{i:02d}Q' for i in range(1, 13)]
+
+    # 收集所有非排除区域的SPR值，用于确定色阶范围
+    all_spr_values = []
+    cell_spr_map = {}
+    for v8 in v8_list:
+        for v9 in v9_list:
+            cell_data = df_combined[(df_combined['V8_Q'] == v8) & (df_combined['V9RN_Q'] == v9)]
+            if len(cell_data) > 0 and cell_data['t3_ato'].sum() > 0:
+                spr = cell_data['t3_safe_adt'].sum() / cell_data['t3_ato'].sum()
+                cell_spr_map[(v8, v9)] = spr
+                if (v8, v9) not in exclude_region:
+                    all_spr_values.append(spr)
+
+    min_spr = min(all_spr_values) if all_spr_values else 0
+    max_spr = max(all_spr_values) if all_spr_values else 1
 
     # 表头
     header_cells = "".join([f'<th>{v9}</th>' for v9 in v9_list])
@@ -760,22 +879,15 @@ def generate_heatmap_html(df_combined, exclude_region):
         row_cells = f"<th>{v8}</th>"
 
         for v9 in v9_list:
-            cell_data = df_combined[(df_combined['V8_Q'] == v8) & (df_combined['V9RN_Q'] == v9)]
-
-            if len(cell_data) > 0 and cell_data['t3_ato'].sum() > 0:
-                spr = cell_data['t3_safe_adt'].sum() / cell_data['t3_ato'].sum()
-
-                # 判断单元格样式
+            if (v8, v9) in cell_spr_map:
+                spr = cell_spr_map[(v8, v9)]
                 if (v8, v9) in exclude_region:
-                    cell_class = "heatmap-cell excluded"
-                elif spr >= 0.15:
-                    cell_class = "heatmap-cell high"
-                elif spr >= 0.10:
-                    cell_class = "heatmap-cell medium"
+                    style = 'background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white; font-weight: 600;'
                 else:
-                    cell_class = "heatmap-cell low"
-
-                row_cells += f'<td class="{cell_class}">{format_percent(spr)}</td>'
+                    bg_color = _spr_to_color(spr, min_spr, max_spr)
+                    text_color = 'white' if spr < (min_spr + max_spr) / 2 else '#333'
+                    style = f'background-color: {bg_color}; color: {text_color};'
+                row_cells += f'<td class="heatmap-cell" style="{style}">{format_percent(spr)}</td>'
             else:
                 row_cells += '<td class="heatmap-cell">-</td>'
 
@@ -930,14 +1042,14 @@ def generate_cross_table_amt_html(both_exclude, only_old, only_new, both_keep,
             <tbody>
                 <tr>
                     <th style="text-align: left;">新策略排除</th>
-                    <td>{format_percent(both_exclude['t3_loan_amt'].sum()/total_ctrl_amt)}</td>
-                    <td>{format_percent(only_new['t3_loan_amt'].sum()/total_ctrl_amt)}</td>
+                    <td style="background-color: #fffbeb;">{format_percent(both_exclude['t3_loan_amt'].sum()/total_ctrl_amt)}</td>
+                    <td style="background-color: #fff5f5;">{format_percent(only_new['t3_loan_amt'].sum()/total_ctrl_amt)}</td>
                     <td class="bold-cell">{format_percent(new_exclude_amt_ratio)}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left;">新策略不排除</th>
-                    <td>{format_percent(only_old['t3_loan_amt'].sum()/total_ctrl_amt)}</td>
-                    <td>{format_percent(both_keep['t3_loan_amt'].sum()/total_ctrl_amt)}</td>
+                    <td style="background-color: #f0fff4;">{format_percent(only_old['t3_loan_amt'].sum()/total_ctrl_amt)}</td>
+                    <td style="background-color: #ebf8ff;">{format_percent(both_keep['t3_loan_amt'].sum()/total_ctrl_amt)}</td>
                     <td class="bold-cell">{format_percent(1-new_exclude_amt_ratio)}</td>
                 </tr>
                 <tr>
@@ -978,14 +1090,14 @@ def generate_cross_table_spr_html(both_exclude, only_old, only_new, both_keep,
             <tbody>
                 <tr>
                     <th style="text-align: left;">新策略排除</th>
-                    <td>{format_percent(calc_spr(both_exclude))}</td>
-                    <td>{format_percent(calc_spr(only_new))}</td>
+                    <td style="background-color: #fffbeb;">{format_percent(calc_spr(both_exclude))}</td>
+                    <td style="background-color: #fff5f5;">{format_percent(calc_spr(only_new))}</td>
                     <td class="bold-cell">{format_percent(new_exclude_spr)}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left;">新策略不排除</th>
-                    <td>{format_percent(calc_spr(only_old))}</td>
-                    <td>{format_percent(calc_spr(both_keep))}</td>
+                    <td style="background-color: #f0fff4;">{format_percent(calc_spr(only_old))}</td>
+                    <td style="background-color: #ebf8ff;">{format_percent(calc_spr(both_keep))}</td>
                     <td class="bold-cell">{format_percent(new_remain_spr)}</td>
                 </tr>
                 <tr>
@@ -1026,14 +1138,14 @@ def generate_cross_table_cps_html(both_exclude, only_old, only_new, both_keep,
             <tbody>
                 <tr>
                     <th style="text-align: left;">新策略排除</th>
-                    <td>{calc_cps(both_exclude):.4f}</td>
-                    <td>{calc_cps(only_new):.4f}</td>
+                    <td style="background-color: #fffbeb;">{calc_cps(both_exclude):.4f}</td>
+                    <td style="background-color: #fff5f5;">{calc_cps(only_new):.4f}</td>
                     <td class="bold-cell">{new_exclude_cps:.4f}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left;">新策略不排除</th>
-                    <td>{calc_cps(only_old):.4f}</td>
-                    <td>{calc_cps(both_keep):.4f}</td>
+                    <td style="background-color: #f0fff4;">{calc_cps(only_old):.4f}</td>
+                    <td style="background-color: #ebf8ff;">{calc_cps(both_keep):.4f}</td>
                     <td class="bold-cell">{new_remain_cps:.4f}</td>
                 </tr>
                 <tr>

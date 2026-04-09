@@ -82,6 +82,20 @@ def parse_arguments():
         help='输出报告格式：excel、html或both（默认：both）'
     )
 
+    parser.add_argument(
+        '--model_x',
+        type=str,
+        default='V8',
+        help='X轴模型名称（默认：V8）'
+    )
+
+    parser.add_argument(
+        '--model_y',
+        type=str,
+        default='V9RN',
+        help='Y轴模型名称（默认：V9RN）'
+    )
+
     return parser.parse_args()
 
 
@@ -107,13 +121,15 @@ def main():
     print(f"  最大排除交易占比: {args.max_exclude_ratio*100:.0f}%")
     print(f"  输出路径: {args.output_path}")
     print(f"  输出格式: {args.output_format}")
+    print(f"  X轴模型: {args.model_x}")
+    print(f"  Y轴模型: {args.model_y}")
 
     try:
         # 步骤1：加载数据
         print("\n" + "="*100)
         print("步骤1：加载数据")
         print("="*100)
-        df = load_data(args.data_path)
+        df = load_data(args.data_path, model_x=args.model_x, model_y=args.model_y)
 
         # 步骤2：数据预处理
         df = preprocess_data(df)
@@ -131,6 +147,10 @@ def main():
             spr_threshold=args.spr_threshold,
             max_exclude_ratio=args.max_exclude_ratio
         )
+
+        # 添加模型名称到结果(供报告显示)
+        result['model_x_name'] = args.model_x
+        result['model_y_name'] = args.model_y
 
         # 步骤6：生成报告
         report_paths = []
