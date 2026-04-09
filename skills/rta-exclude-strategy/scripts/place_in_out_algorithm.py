@@ -5,6 +5,7 @@
 
 import pandas as pd
 import numpy as np
+from utils import make_region_mask, filter_by_region
 
 
 def run_place_in_out_algorithm(df_combined, df_ctrl, spr_threshold=0.10, max_exclude_ratio=0.20):
@@ -102,16 +103,12 @@ def step1_initial_selection(df_combined, df_ctrl, spr_threshold, max_exclude_rat
     print(f"初始格子数: {len(initial_region)}")
 
     # 计算初始区域的安全过件率
-    initial_data = df_combined[df_combined.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in initial_region, axis=1
-    )]
+    initial_data = filter_by_region(df_combined, initial_region)
     initial_safe_rate = initial_data['t3_safe_adt'].sum() / initial_data['t3_ato'].sum()
     print(f"初始SPR: {initial_safe_rate*100:.2f}%")
 
     # 检查对照组排除交易占比
-    initial_ctrl = df_ctrl[df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in initial_region, axis=1
-    )]
+    initial_ctrl = filter_by_region(df_ctrl, initial_region)
     total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
     initial_ctrl_ratio = initial_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
     print(f"对照组排除交易占比: {initial_ctrl_ratio*100:.2f}%")
@@ -163,9 +160,7 @@ def step2_place_in(df_combined, initial_region, j, spr_threshold):
 
     # 步骤1: 检查[12,j]的SPR
     cell_12_j = [('12Q', f'{j:02d}Q')]
-    data_12_j = df_combined[df_combined.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in cell_12_j, axis=1
-    )]
+    data_12_j = filter_by_region(df_combined, cell_12_j)
 
     if data_12_j['t3_ato'].sum() > 0:
         spr_12_j = data_12_j['t3_safe_adt'].sum() / data_12_j['t3_ato'].sum()
@@ -178,16 +173,12 @@ def step2_place_in(df_combined, initial_region, j, spr_threshold):
             if j > 1:
                 # 检查[12,j]到[12,j-1]的整体SPR
                 cells_12_j_to_j_minus_1 = [('12Q', f'{j:02d}Q'), ('12Q', f'{j-1:02d}Q')]
-                data_left = df_combined[df_combined.apply(
-                    lambda row: (row['V8_Q'], row['V9RN_Q']) in cells_12_j_to_j_minus_1, axis=1
-                )]
+                data_left = filter_by_region(df_combined, cells_12_j_to_j_minus_1)
                 spr_left = data_left['t3_safe_adt'].sum() / data_left['t3_ato'].sum() if data_left['t3_ato'].sum() > 0 else 0
 
                 # 检查[12,j]到[11,j]的整体SPR
                 cells_12_to_11_j = [('12Q', f'{j:02d}Q'), ('11Q', f'{j:02d}Q')]
-                data_up = df_combined[df_combined.apply(
-                    lambda row: (row['V8_Q'], row['V9RN_Q']) in cells_12_to_11_j, axis=1
-                )]
+                data_up = filter_by_region(df_combined, cells_12_to_11_j)
                 spr_up = data_up['t3_safe_adt'].sum() / data_up['t3_ato'].sum() if data_up['t3_ato'].sum() > 0 else 0
 
                 print(f"  检查[12Q,{j:02d}Q]到[12Q,{j-1:02d}Q]整体SPR: {spr_left*100:.2f}%")
@@ -203,9 +194,7 @@ def step2_place_in(df_combined, initial_region, j, spr_threshold):
             elif j == 1:
                 # j=1时，只检查[12,j]到[11,j]的整体SPR
                 cells_12_to_11_j = [('12Q', f'{j:02d}Q'), ('11Q', f'{j:02d}Q')]
-                data_up = df_combined[df_combined.apply(
-                    lambda row: (row['V8_Q'], row['V9RN_Q']) in cells_12_to_11_j, axis=1
-                )]
+                data_up = filter_by_region(df_combined, cells_12_to_11_j)
                 spr_up = data_up['t3_safe_adt'].sum() / data_up['t3_ato'].sum() if data_up['t3_ato'].sum() > 0 else 0
 
                 print(f"  j=1，检查[12Q,{j:02d}Q]到[11Q,{j:02d}Q]整体SPR: {spr_up*100:.2f}%")
@@ -236,9 +225,7 @@ def step2_place_in(df_combined, initial_region, j, spr_threshold):
                 new_cells = [(f'{v8:02d}Q', f'{new_v9:02d}Q')
                             for v8 in range(place_v8_min, place_v8_max + 1)]
 
-                new_data = df_combined[df_combined.apply(
-                    lambda row: (row['V8_Q'], row['V9RN_Q']) in new_cells, axis=1
-                )]
+                new_data = filter_by_region(df_combined, new_cells)
 
                 if new_data['t3_ato'].sum() > 0:
                     new_spr = new_data['t3_safe_adt'].sum() / new_data['t3_ato'].sum()
@@ -264,9 +251,7 @@ def step2_place_in(df_combined, initial_region, j, spr_threshold):
                 new_cells = [(f'{new_v8:02d}Q', f'{v9:02d}Q')
                             for v9 in range(place_v9_min, place_v9_max + 1)]
 
-                new_data = df_combined[df_combined.apply(
-                    lambda row: (row['V8_Q'], row['V9RN_Q']) in new_cells, axis=1
-                )]
+                new_data = filter_by_region(df_combined, new_cells)
 
                 if new_data['t3_ato'].sum() > 0:
                     new_spr = new_data['t3_safe_adt'].sum() / new_data['t3_ato'].sum()
@@ -341,9 +326,7 @@ def step3_place_out(df_combined, j, spr_threshold):
 
     # 步骤1: 检查[1,j+1]的SPR
     cell_1_j_plus_1 = [('01Q', f'{j+1:02d}Q')]
-    data_1_j_plus_1 = df_combined[df_combined.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in cell_1_j_plus_1, axis=1
-    )]
+    data_1_j_plus_1 = filter_by_region(df_combined, cell_1_j_plus_1)
 
     if data_1_j_plus_1['t3_ato'].sum() > 0:
         spr_1_j_plus_1 = data_1_j_plus_1['t3_safe_adt'].sum() / data_1_j_plus_1['t3_ato'].sum()
@@ -355,17 +338,13 @@ def step3_place_out(df_combined, j, spr_threshold):
 
             # 检查[1,j+1]到[2,j+1]的整体SPR
             cells_down = [('01Q', f'{j+1:02d}Q'), ('02Q', f'{j+1:02d}Q')]
-            data_down = df_combined[df_combined.apply(
-                lambda row: (row['V8_Q'], row['V9RN_Q']) in cells_down, axis=1
-            )]
+            data_down = filter_by_region(df_combined, cells_down)
             spr_down = data_down['t3_safe_adt'].sum() / data_down['t3_ato'].sum() if data_down['t3_ato'].sum() > 0 else 0
 
             # 检查[1,j+1]到[1,j+2]的整体SPR
             if j+1 < 12:
                 cells_right = [('01Q', f'{j+1:02d}Q'), ('01Q', f'{j+2:02d}Q')]
-                data_right = df_combined[df_combined.apply(
-                    lambda row: (row['V8_Q'], row['V9RN_Q']) in cells_right, axis=1
-                )]
+                data_right = filter_by_region(df_combined, cells_right)
                 spr_right = data_right['t3_safe_adt'].sum() / data_right['t3_ato'].sum() if data_right['t3_ato'].sum() > 0 else 0
 
                 print(f"  检查[01Q,{j+1:02d}Q]到[02Q,{j+1:02d}Q]整体SPR: {spr_down*100:.2f}%")
@@ -407,9 +386,7 @@ def step3_place_out(df_combined, j, spr_threshold):
                     new_cells = [(f'{new_v8:02d}Q', f'{v9:02d}Q')
                                 for v9 in range(place_v9_min, place_v9_max + 1)]
 
-                    new_data = df_combined[df_combined.apply(
-                        lambda row: (row['V8_Q'], row['V9RN_Q']) in new_cells, axis=1
-                    )]
+                    new_data = filter_by_region(df_combined, new_cells)
 
                     if new_data['t3_ato'].sum() > 0:
                         new_spr = new_data['t3_safe_adt'].sum() / new_data['t3_ato'].sum()
@@ -435,9 +412,7 @@ def step3_place_out(df_combined, j, spr_threshold):
                     new_cells = [(f'{v8:02d}Q', f'{new_v9:02d}Q')
                                 for v8 in range(place_v8_min, place_v8_max + 1)]
 
-                    new_data = df_combined[df_combined.apply(
-                        lambda row: (row['V8_Q'], row['V9RN_Q']) in new_cells, axis=1
-                    )]
+                    new_data = filter_by_region(df_combined, new_cells)
 
                     if new_data['t3_ato'].sum() > 0:
                         new_spr = new_data['t3_safe_adt'].sum() / new_data['t3_ato'].sum()
@@ -515,9 +490,7 @@ def step5_validate_constraints(df_ctrl, exclude_region, max_exclude_ratio):
     print("步骤5：约束条件验证")
     print("="*100)
 
-    exclude_ctrl = df_ctrl[df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
+    exclude_ctrl = filter_by_region(df_ctrl, set(exclude_region))
 
     total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
     exclude_ctrl_ratio = exclude_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
@@ -540,11 +513,12 @@ def step5_validate_constraints(df_ctrl, exclude_region, max_exclude_ratio):
 
 
 def adjust_threshold(df_combined, df_ctrl, initial_region, place_in_region,
-                     j, spr_threshold, max_exclude_ratio, max_iterations=10):
+                     j, spr_threshold, max_exclude_ratio, max_iterations=20):
     """
-    调整阈值以满足约束条件
+    二分搜索调整阈值以满足约束条件
 
-    如果排除交易占比超过最大值，降低置出阈值重新执行
+    如果排除交易占比超过最大值，通过二分搜索降低置出阈值重新执行
+    相比线性缩减(0.9x)，二分搜索收敛更快且更精确
 
     Args:
         df_combined: 全量数据
@@ -560,34 +534,48 @@ def adjust_threshold(df_combined, df_ctrl, initial_region, place_in_region,
         tuple: (exclude_region, place_out_region)
     """
     print("\n" + "="*100)
-    print("调整阈值以满足约束条件")
+    print("二分搜索调整阈值以满足约束条件")
     print("="*100)
 
-    current_threshold = spr_threshold
     total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
 
+    lo = 0.0
+    hi = spr_threshold
+    best_exclude = None
+    best_place_out = None
+
     for iteration in range(max_iterations):
-        # 降低阈值
-        current_threshold = current_threshold * 0.9
-        print(f"\n迭代{iteration+1}: 调整置出阈值为 {current_threshold*100:.2f}%")
+        mid = (lo + hi) / 2
+        print(f"\n迭代{iteration+1}: 阈值={mid*100:.3f}% (范围: [{lo*100:.3f}%, {hi*100:.3f}%])")
 
-        # 重新执行置出
-        place_out_region = step3_place_out(df_combined, j, current_threshold)
-
-        # 计算最终排除区域
+        place_out_region = step3_place_out(df_combined, j, mid)
         exclude_region = list((set(initial_region) - set(place_in_region)) | set(place_out_region))
 
-        # 验证约束
-        exclude_ctrl = df_ctrl[df_ctrl.apply(
-            lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-        )]
+        exclude_ctrl = filter_by_region(df_ctrl, set(exclude_region))
         exclude_ctrl_ratio = exclude_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
 
         print(f"  排除交易占比: {exclude_ctrl_ratio*100:.2f}%")
 
         if exclude_ctrl_ratio <= max_exclude_ratio:
-            print(f"  [SUCCESS] 满足约束条件")
-            return exclude_region, place_out_region
+            best_exclude = exclude_region
+            best_place_out = place_out_region
+            lo = mid
+            print(f"  [OK] 满足约束，尝试扩大排除区域")
+            if max_exclude_ratio - exclude_ctrl_ratio < 0.005:
+                print(f"  [EARLY STOP] 接近约束上限，终止搜索")
+                break
+        else:
+            hi = mid
+            print(f"  [OVER] 超出约束，缩小排除区域")
 
-    print(f"\n[WARNING] ���到最大迭代次数，仍无法满足约束条件")
-    return exclude_region, place_out_region
+        if hi - lo < 0.001:
+            print(f"\n[CONVERGED] 阈值收敛于 {mid*100:.3f}%")
+            break
+
+    if best_exclude is not None:
+        print(f"\n[SUCCESS] 找到满足约束的最优阈值")
+        return best_exclude, best_place_out
+
+    print(f"\n[WARNING] 无法找到满足约束的阈值，返回无置出结果")
+    exclude_region = list(set(initial_region) - set(place_in_region))
+    return exclude_region, []

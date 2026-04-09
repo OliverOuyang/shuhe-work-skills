@@ -3,8 +3,10 @@
 """
 RTA Exclude Strategy - Shared Utility Functions
 
-Common functions used across report_generator.py and html_report_generator.py.
+Common functions used across all modules.
 """
+
+import pandas as pd
 
 
 def convert_old_rule_to_quantile(old_exclude_rule):
@@ -40,3 +42,46 @@ def calc_cps(df):
     if df['t3_loan_amt'].sum() > 0:
         return df['cost'].sum() / df['t3_loan_amt'].sum()
     return 0
+
+
+# ============================================================================
+# Vectorized region lookup helpers
+# ============================================================================
+
+def make_region_mask(df, region, v8_col='V8_Q', v9_col='V9RN_Q'):
+    """
+    Vectorized boolean mask for (V8, V9RN) region membership.
+
+    Replaces the slow pattern:
+        df.apply(lambda row: (row['V8_Q'], row['V9RN_Q']) in region, axis=1)
+
+    Uses pd.MultiIndex.isin() for O(n) with set lookup instead of O(n*m).
+
+    Args:
+        df: DataFrame with V8/V9RN columns
+        region: collection of (v8, v9) tuples (list, set, etc.)
+        v8_col: V8 column name
+        v9_col: V9RN column name
+
+    Returns:
+        pd.Series[bool]: boolean mask aligned to df.index
+    """
+    if not region:
+        return pd.Series(False, index=df.index)
+    region_set = set(region) if not isinstance(region, set) else region
+    idx = pd.MultiIndex.from_arrays([df[v8_col], df[v9_col]])
+    return pd.Series(idx.isin(region_set), index=df.index)
+
+
+def filter_by_region(df, region, v8_col='V8_Q', v9_col='V9RN_Q'):
+    """
+    Return rows whose (V8, V9RN) pair is in the given region.
+
+    Args:
+        df: DataFrame
+        region: collection of (v8, v9) tuples
+
+    Returns:
+        DataFrame: filtered rows
+    """
+    return df[make_region_mask(df, region, v8_col, v9_col)]

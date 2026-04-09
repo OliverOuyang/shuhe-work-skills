@@ -10,7 +10,13 @@ from openpyxl.styles import Font, Alignment, PatternFill, numbers
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
-from utils import convert_old_rule_to_quantile, calc_spr, calc_cps
+from utils import convert_old_rule_to_quantile, calc_spr, calc_cps, make_region_mask, filter_by_region
+from metrics import (
+    calc_comparison_metrics,
+    calc_four_segments,
+    calc_segment_amt_ratios,
+    calc_v8_spr_table,
+)
 
 
 def generate_report(result, old_exclude_rule, output_path=None):
@@ -166,27 +172,16 @@ def generate_section1_conclusion(ws, current_row, df_ctrl, exclude_region, old_e
     current_row += 1
 
     # 计算指标
-    total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
-
-    # 老策略指标
-    old_exclude_data_ctrl = df_ctrl[df_ctrl['V8_Q'].isin(old_exclude_v8)]
-    old_exclude_amt_ratio = old_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
-    old_exclude_spr = calc_spr(old_exclude_data_ctrl)
-    old_remain_data_ctrl = df_ctrl[~df_ctrl['V8_Q'].isin(old_exclude_v8)]
-    old_remain_spr = calc_spr(old_remain_data_ctrl)
-    old_remain_cps = calc_cps(old_remain_data_ctrl)
-
-    # 新策略指标
-    new_exclude_data_ctrl = df_ctrl[df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
-    new_exclude_amt_ratio = new_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
-    new_exclude_spr = calc_spr(new_exclude_data_ctrl)
-    new_remain_data_ctrl = df_ctrl[~df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
-    new_remain_spr = calc_spr(new_remain_data_ctrl)
-    new_remain_cps = calc_cps(new_remain_data_ctrl)
+    m = calc_comparison_metrics(df_ctrl, exclude_region, old_exclude_v8)
+    total_ctrl_amt = m['total_ctrl_amt']
+    old_exclude_amt_ratio = m['old_exclude_amt_ratio']
+    old_exclude_spr = m['old_exclude_spr']
+    old_remain_spr = m['old_remain_spr']
+    old_remain_cps = m['old_remain_cps']
+    new_exclude_amt_ratio = m['new_exclude_amt_ratio']
+    new_exclude_spr = m['new_exclude_spr']
+    new_remain_spr = m['new_remain_spr']
+    new_remain_cps = m['new_remain_cps']
 
     # 生成结论文本
     conclusion_text = f"""核心结论：
@@ -271,12 +266,7 @@ def generate_section2_1_old_strategy(ws, current_row, df_combined, old_exclude_v
     current_row += 1
 
     # 计算V8各分位的安全过件率（全量数据）
-    v8_list = [f'{i:02d}Q' for i in range(1, 13)]
-    v8_stats_all = df_combined.groupby('V8_Q').agg({
-        't3_ato': 'sum',
-        't3_safe_adt': 'sum'
-    }).reset_index()
-    v8_stats_all['安全过件率'] = v8_stats_all['t3_safe_adt'] / v8_stats_all['t3_ato']
+    v8_stats_all, v8_list = calc_v8_spr_table(df_combined)
 
     # 表头
     ws.cell(row=current_row, column=1, value="V8分位")
@@ -346,33 +336,22 @@ def generate_section2_2_new_strategy(ws, current_row, df_combined, df_ctrl, excl
     current_row += 1
 
     # 计算指标
-    total_ctrl_expo = df_ctrl['expo_cnt'].sum()
-    total_ctrl_ato = df_ctrl['t3_ato'].sum()
-    total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
-
-    # 老策略指标
-    old_exclude_data_ctrl = df_ctrl[df_ctrl['V8_Q'].isin(old_exclude_v8)]
-    old_exclude_expo_ratio = old_exclude_data_ctrl['expo_cnt'].sum() / total_ctrl_expo
-    old_exclude_ato_ratio = old_exclude_data_ctrl['t3_ato'].sum() / total_ctrl_ato
-    old_exclude_amt_ratio = old_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
-    old_exclude_spr = calc_spr(old_exclude_data_ctrl)
-    old_remain_data_ctrl = df_ctrl[~df_ctrl['V8_Q'].isin(old_exclude_v8)]
-    old_remain_spr = calc_spr(old_remain_data_ctrl)
-    old_remain_cps = calc_cps(old_remain_data_ctrl)
-
-    # 新策略指标
-    new_exclude_data_ctrl = df_ctrl[df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
-    new_exclude_expo_ratio = new_exclude_data_ctrl['expo_cnt'].sum() / total_ctrl_expo
-    new_exclude_ato_ratio = new_exclude_data_ctrl['t3_ato'].sum() / total_ctrl_ato
-    new_exclude_amt_ratio = new_exclude_data_ctrl['t3_loan_amt'].sum() / total_ctrl_amt
-    new_exclude_spr = calc_spr(new_exclude_data_ctrl)
-    new_remain_data_ctrl = df_ctrl[~df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )]
-    new_remain_spr = calc_spr(new_remain_data_ctrl)
-    new_remain_cps = calc_cps(new_remain_data_ctrl)
+    m = calc_comparison_metrics(df_ctrl, exclude_region, old_exclude_v8)
+    total_ctrl_expo = m['total_ctrl_expo']
+    total_ctrl_ato = m['total_ctrl_ato']
+    total_ctrl_amt = m['total_ctrl_amt']
+    old_exclude_expo_ratio = m['old_exclude_expo_ratio']
+    old_exclude_ato_ratio = m['old_exclude_ato_ratio']
+    old_exclude_amt_ratio = m['old_exclude_amt_ratio']
+    old_exclude_spr = m['old_exclude_spr']
+    old_remain_spr = m['old_remain_spr']
+    old_remain_cps = m['old_remain_cps']
+    new_exclude_expo_ratio = m['new_exclude_expo_ratio']
+    new_exclude_ato_ratio = m['new_exclude_ato_ratio']
+    new_exclude_amt_ratio = m['new_exclude_amt_ratio']
+    new_exclude_spr = m['new_exclude_spr']
+    new_remain_spr = m['new_remain_spr']
+    new_remain_cps = m['new_remain_cps']
 
     # 表头
     ws.cell(row=current_row, column=1, value="指标")
@@ -548,15 +527,9 @@ def generate_section3_1_place_analysis(ws, current_row, df_ctrl, exclude_region,
     current_row += 1
 
     # 计算四个客群
-    df_ctrl['old_exclude'] = df_ctrl['V8_Q'].isin(old_exclude_v8)
-    df_ctrl['new_exclude'] = df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )
-
-    both_exclude = df_ctrl[(df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]
-    only_old = df_ctrl[(df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]  # 置入客群
-    only_new = df_ctrl[(~df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]  # 置出客群
-    both_keep = df_ctrl[(~df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]
+    segs = calc_four_segments(df_ctrl, exclude_region, old_exclude_v8)
+    only_old = segs['only_old']  # 置入客群
+    only_new = segs['only_new']  # 置出客群
 
     # 计算指标
     total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
@@ -613,21 +586,18 @@ def generate_section3_2_cross_tables(ws, current_row, df_ctrl, exclude_region, o
     current_row += 1
 
     # 计算四个客群
-    df_ctrl['old_exclude'] = df_ctrl['V8_Q'].isin(old_exclude_v8)
-    df_ctrl['new_exclude'] = df_ctrl.apply(
-        lambda row: (row['V8_Q'], row['V9RN_Q']) in exclude_region, axis=1
-    )
-
-    both_exclude = df_ctrl[(df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]
-    only_old = df_ctrl[(df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]
-    only_new = df_ctrl[(~df_ctrl['old_exclude']) & (df_ctrl['new_exclude'])]
-    both_keep = df_ctrl[(~df_ctrl['old_exclude']) & (~df_ctrl['new_exclude'])]
+    segs = calc_four_segments(df_ctrl, exclude_region, old_exclude_v8)
+    both_exclude = segs['both_exclude']
+    only_old = segs['only_old']
+    only_new = segs['only_new']
+    both_keep = segs['both_keep']
 
     total_ctrl_amt = df_ctrl['t3_loan_amt'].sum()
 
     # 计算新老策略的排除交易占比
-    new_exclude_amt_ratio = (both_exclude['t3_loan_amt'].sum() + only_new['t3_loan_amt'].sum()) / total_ctrl_amt
-    old_exclude_amt_ratio = (both_exclude['t3_loan_amt'].sum() + only_old['t3_loan_amt'].sum()) / total_ctrl_amt
+    new_exclude_amt_ratio, old_exclude_amt_ratio = calc_segment_amt_ratios(
+        both_exclude, only_old, only_new, total_ctrl_amt
+    )
 
     # 表1：交易占比交叉表
     current_row = generate_cross_table_amt(ws, current_row, both_exclude, only_old, only_new, both_keep,

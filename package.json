@@ -49,15 +49,16 @@
       },
       {
         "name": "rta-exclude-strategy",
-        "version": "1.0.0",
-        "description": "RTA排除策略自动分析工具 - 基于V8和V9RN模型的二维交叉分析，自动生成排除策略Excel报告",
+        "version": "2.1.0",
+        "description": "RTA排除策略分析 - 双算法(贪心+ILP)+多目标优化+Uplift因果推断+PSI稳定性+自动分箱+批量回测",
         "docPath": "skills/rta-exclude-strategy/SKILL.md",
         "command": "/rta-exclude-strategy",
         "dependencies": {
           "python": [
             "pandas>=1.3.0",
             "numpy>=1.20.0",
-            "openpyxl>=3.0.0"
+            "openpyxl>=3.0.0",
+            "pulp>=2.7.0"
           ]
         },
         "tags": [
@@ -65,8 +66,10 @@
           "advertising",
           "model-analysis",
           "excel",
+          "html",
           "reporting",
-          "automation"
+          "automation",
+          "optimization"
         ]
       },
       {
