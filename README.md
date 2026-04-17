@@ -4,7 +4,7 @@
 
 **目标用户**: 数禾数据分析师、企业级数据平台用户（观远、Dataphin）、需要自动化数据分析和报告生成的团队成员
 
-**版本**: v1.8.0 | **核心 Skills**: 15 个（3 数禾定制 + 4 数据工具 + 3 治理规范 + 3 OMC 核心 + 2 测试工具）
+**版本**: v1.11.0 | **核心 Skills**: 17 个（3 数禾定制 + 6 数据工具 + 3 治理规范 + 3 OMC 核心 + 2 测试工具）
 
 ---
 
@@ -69,6 +69,8 @@ claude
 | **sql-runner** | 使用Dataphin MCP工具执行SQL文件 | • 自动提交查询<br>• 轮询结果<br>• 保存为CSV文件 | `/sql-runner` |
 | **html-report-framework** | HTML报告通用框架（ECharts + 动态居中 + 侧栏折叠 + 结论引擎） | • ECharts 图表渲染<br>• CSS max() 动态居中<br>• 可折叠侧栏<br>• 规则驱动结论 | `/html-report-framework` |
 | **monthly-report-html-generator** | 月报HTML生成器（V04：f-string + ECharts + 14结论） | • 单脚本生成<br>• 23个ECharts图表<br>• 14个结论生成器<br>• 侧栏导航 | `/monthly-report-html-generator` |
+| **notebook-standardizer** | Notebook 标准化规范（M1-M8 单元格规范 + 分析章节模板 + 验证脚本） | • 标准化/清理 Notebook<br>• 问题驱动 & 监控双模板<br>• 单元格标签规范 | `/notebook-standardizer` |
+| **notebook-executor** | Notebook 端到端执行器（SQL 预校验 → 自动执行 → 错误诊断修复） | • 端到端执行 Notebook<br>• 12 种错误自动修复<br>• 支持超时和重试控制 | `/notebook-executor` |
 
 **依赖**: sql-runner 需要配置 Dataphin MCP（MCP: `sh_dp_mcp`）
 

@@ -1,6 +1,9 @@
 ---
 name: notebook-executor
 description: Execute Jupyter notebooks end-to-end with SQL pre-validation, error diagnosis, and auto-fix loops. Use when "run notebook", "execute notebook", "test notebook", or "validate notebook execution".
+version: 1.0.0
+level: intermediate
+tags: ["data-tool", "notebook", "automation"]
 ---
 
 # Notebook Executor

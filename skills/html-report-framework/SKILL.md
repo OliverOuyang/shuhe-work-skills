@@ -2,6 +2,8 @@
 name: html-report-framework
 description: "HTML 报告生成通用框架 - CSS 变量设计系统、专业组件库、ECharts 图表、Mermaid 流程图、动态居中布局、可折叠侧栏、规则驱动结论。当用户需要生成 HTML 报告、数据看板、SOP 文档、KPI dashboard 或任何自包含网页报告时使用。"
 version: 3.1.0
+level: advanced
+tags: ["html", "reporting", "echarts", "visualization", "data-tool"]
 ---
 
 # HTML 报告通用框架

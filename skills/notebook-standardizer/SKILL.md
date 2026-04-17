@@ -1,6 +1,9 @@
 ---
 name: notebook-standardizer
 description: "Standardize Jupyter notebooks (.ipynb) for interactive data analysis workflows. Enforces a mandatory cell manifest (M1-M8 + archetype chapters) with tags ([CONFIG]/[SETUP]/[FUNC]/[RUN]/[VIZ]/[EXPORT]), structured markdown sections, and output prefixes ([OK]/[WARN]/[SKIP]). Use when the user wants to standardize, clean up, or create a notebook from scratch. Two archetypes: problem-driven (question-answer analysis) and monitoring (dimension-based periodic reporting)."
+version: 1.0.0
+level: intermediate
+tags: ["data-tool", "notebook", "standardization"]
 ---
 
 # Notebook Standardizer V3

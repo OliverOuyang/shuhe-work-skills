@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.0] - 2026-04-17
+
+### Added
+- **notebook-standardizer** - Notebook 标准化规范（M1-M8 单元格规范 + 分析章节模板 + 验证脚本）
+- **notebook-executor** - Notebook 端到端执行器（SQL 预校验 → 自动执行 → 错误诊断修复，12 种错误自动修复）
+
+### Changed
+- **html-report-framework** - 更新 SKILL.md，新增 ARCHITECTURE.md 架构文档和 validate_report.py 验证脚本
+- 补齐三个 SKILL.md 的 YAML frontmatter（level、tags 字段）
+- package.json 注册 notebook-standardizer、notebook-executor、html-report-framework
+- README.md 数据工具 Skills 计数从 4 更新为 6，核心 Skills 从 15 更新为 17
+
 ## [1.10.0] - 2026-04-01
 
 ### Added
