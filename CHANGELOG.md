@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2026-04-17
+
+### Breaking Changes
+- **移除所有 oh-my-claudecode skills**（31 个）：ai-slop-cleaner, ask, autopilot, cancel, ccg, configure-notifications, deep-dive, deepinit, deep-interview, external-context, hud, learner, mcp-setup, omc-doctor, omc-reference, omc-setup, omc-teams, plan, project-session-manager, ralph, ralplan, release, sciomc, setup, skill, team, trace, ultraqa, ultrawork, visual-verdict, writer-memory
+- **移除业务 skills**（4 个）：guanyuan-data-fetcher, guanyuan-monitor, rta-exclude-strategy, sop-document-generator
+- 仓库定位从"数禾 + OMC 完整工具链"精简为"数禾 DS 团队自用 skills 库"
+
+### Changed
+- package.json 版本升至 2.0.0，description 移除 OMC 引用
+- 注册 sql-validate-and-export、monthly-report-html-generator（此前未注册）
+- README.md 全面重写，精简为 13 个 skills 的纯自用文档
+- keywords 移除 omc、oh-my-claudecode 相关词
+
+### Retained Skills (13)
+- SQL 工具：sql-optimizer, sql-runner, sql-validate-and-export
+- 报告与 Notebook：html-report-framework, monthly-report-html-generator, notebook-standardizer, notebook-executor
+- Agent：self-improving-agent
+- 治理规范：skill-governance, claude-dir-governance, skill-lifecycle-manager, skill-auto-evolver, skill-vetter
+
 ## [1.11.0] - 2026-04-17
 
 ### Added

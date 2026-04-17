@@ -1,0 +1,17 @@
+{
+  "name": "skill-vetter",
+  "version": "1.0.0",
+  "description": "Security-first vetting for OpenClaw skills. Use before installing any skill from ClawHub, GitHub, or other sources.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "security",
+    "vetting",
+    "openclaw",
+    "skill"
+  ],
+  "author": "useclawpro",
+  "license": "ISC"
+}

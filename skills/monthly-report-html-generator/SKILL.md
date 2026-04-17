@@ -1,339 +1,265 @@
 ---
 name: monthly-report-html-generator
-description: 从数据源自动生成月度运营数据 HTML 报告，包含图表、结论、层级导航
-triggers:
-  - 月报
-  - monthly report
-  - html报告
-  - 数据报告
-  - 运营报告
-argument-hint: <数据源路径> [配置文件]
-quality: high
-source: conversation
+description: "从数据源自动生成月度运营数据 HTML 报告，支持 ECharts 图表、规则驱动结论、可折叠侧栏导航"
+version: 1.1.0
 ---
 
 # 月报 HTML 生成器
 
 ## Purpose
 
-从 Excel/CSV/Dataphin 数据源自动生成交互式月度运营数据 HTML 报告，支持图表渲染、结论生成、层级导航和可编辑内容。
+从 Excel/CSV/Dataphin 数据源自动生成交互式月度运营数据 HTML 报告。单一 Python 脚本读取所有数据 CSV，通过 f-string 模板直接生成完整 HTML（含 ECharts 图表 + 规则驱动结论 + 可折叠侧栏导航）。
 
 ## When to Activate
 
 当用户需要生成月度运营数据报告时自动激活，特别适用于：
-- 从数据仓库生成定期报告
-- 将 Excel 数据可视化为网页
+- 从数据仓库生成定期报告（Excel → CSV → HTML）
+- 将 CSV 数据可视化为交互式网页
 - 复刻 PPT 风格的数据报告为 HTML
+- 需要自动生成数据结论的报告
+
+## Architecture
+
+### V04 架构（当前版本）
+
+```
+Input/rawdata.xlsx
+    ↓ process_data.py（数据处理，产出 23 个 CSV）
+Output/*.csv
+    ↓ generate_html.py（单脚本，f-string 模板）
+HTML/月报报告_{YYYYMMDD}_{HHMM}.html（自包含，仅依赖 CDN ECharts）
+```
+
+**核心设计决策**：
+- **单文件输出**：HTML 自包含所有 CSS + JS + 数据，无外部依赖文件
+- **ECharts 5.5.0**：CDN 加载 + fallback，替代 Chart.js
+- **Python f-string 模板**：数据直接嵌入 JS 数组，无需中间 JSON
+- **规则驱动结论**：基于环比计算自动生成，非 AI 生成
 
 ## Core Capabilities
 
 ### 1. 数据处理
 - **多源数据读取**：支持 Excel (.xlsx)、CSV、Dataphin MCP 查询
 - **数据校验**：自动检测字段缺失、数据类型错误
-- **数据转换**：聚合、透视、计算衍生指标
-- **中间数据快照**：保存处理过程中的 CSV 快照用于调试
+- **单位转换**：原始值 → 显示单位（÷1e8=亿, ÷1e4=万, ×100=%, ×1000=‰）
+- **字段名兼容**：`get_month_col()` 处理 `month` / `date_month` 双命名
+- **中间数据快照**：保存处理过程中的 CSV 快照用于调试和校验
 
-### 2. 图表渲染
-- **Chart.js 集成**：支持柱状图、折线图、混合图、饼图、漏斗图
-- **数据驱动**：图表配置从 JSON 文件加载
-- **响应式布局**：单图居中80%、双图左右48%并列
-- **自动初始化**：27+ 图表类型自动渲染
+### 2. 图表渲染（ECharts 5.5.0）
+- **图表类型注册表**：
+  - `stacked_bar_line`：堆叠柱状图 + 折线（交易额、花费）
+  - `dual_line`：双折线图（CPS、转化漏斗）
+  - `bar_multi_line`：柱状图 + 多折线（质量指标）
+  - `dual_line_with_bar`：柱状图 + 双折线（渠道成本）
+  - `single_line`：单折线（整体竞得率、转化率）
+  - `multi_line_grouped`：多折线分组（分Q竞得率）
+  - `stacked_column_chart`：堆叠柱状图（撞库数据）
+- **数据标签**：全部图表默认启用
+- **CDN + Fallback**：bootcdn 主加载 + jsdelivr 备用
+- **自动 resize**：`window.addEventListener('resize')` 遍历所有图表实例
 
-### 3. 内容生成
-- **结论文本**：基于数据自动生成或手动输入
-- **层级标题**：3级标题结构（一级章节 → 二级主题 → 三级细节）
-- **可编辑内容**：`contenteditable="true"` 支持浏览器内编辑
+### 3. 规则驱动结论生成
+- **环比计算引擎**：`_trend_word(cur, prev)` 返回方向词 + 变化幅度
+- **14 个结论生成器**：每个报告板块一个专用函数
+  - `gen_conclusion_scale()` — 规模（交易额 + 花费 + 最大客群）
+  - `gen_conclusion_cost()` — 成本（全首借CPS + T0CPS）
+  - `gen_conclusion_quality()` — 质量（额度 + 过件率）
+  - `gen_conclusion_channel_overview()` — 渠道总览（日耗 + CPS + 额度 + 过件率）
+  - `gen_conclusion_request()` — 请求（请求量 + 参竞率）
+  - `gen_conclusion_winrate()` — 竞得率（整体 + 分Q）
+  - `gen_conclusion_conversion()` — 转化（曝光-授信 + CTR + CVR）
+  - `gen_conclusion_jz_attack()` — 精准撞库
+  - `gen_conclusion_jz_conversion()` — 精准转化
+- **输出格式**：`<strong>2月XX：</strong>指标A XX元，环比上升X%；`
 
 ### 4. 布局样式
-- **PPT 风格排版**：
-  - 棕色标题 (#8B4513)
-  - 金色分隔线 (#DAA520)
-  - 浅灰结论框 (#F5F5F5)
-  - 结论 + 图表垂直布局
-- **侧边栏导航**：3层级导航，点击跳转，当前章节高亮
-- **响应式设计**：小屏自动隐藏侧边栏
+- **深蓝主题排版**：
+  - 标题色 #1a365d，边框色 #d5cec4
+  - 结论框左蓝边 blockquote 样式
+  - 图表容器白色卡片 + 圆角阴影
+- **侧边栏导航**：3层级，点击跳转，折叠/展开动画
+- **侧栏折叠按钮**：`toggleSidebar()` + CSS transition
+- **动态居中**：`margin-left: max(260px, calc((100vw - 1200px) / 2))`
+- **响应式设计**：小屏侧栏自适应 + 图表单列
+- **可编辑内容**：`contenteditable="true"` 支持浏览器内编辑
+- **HTML 导出**：内置导出按钮
 
 ## Workflow
 
-### Step 1: 数据源分析
-```bash
-# 探索旧版数据处理逻辑
-cd /path/to/legacy/report
-python generate_report.py --dry-run  # 查看数据流程
-```
-
-**关键文件**：
-- `generate_report.py` - 编排层入口
-- `core/data_processor.py` - 22个 indicator builder
-- `config/analysis_templates.py` - 分析模板和计算公式
-- `Data/intermediate/legacy_logs/*.csv` - 中间快照
-
-### Step 2: 数据提取与转换
+### Step 1: 数据处理（process_data.py）
 ```python
-# 从 Excel 提取数据
+# 读取源数据 Excel，处理并输出 CSV
 import pandas as pd
-
-data = pd.read_excel('source.xlsx', sheet_name='pivot')
-charts_data = {
-    'chart1': {
-        'labels': data['month'].tolist(),
-        'series': [{'name': '首借', 'data': data['首借'].tolist()}]
-    }
-}
-# 保存为 JSON
-import json
-with open('data/report-data.json', 'w', encoding='utf-8') as f:
-    json.dump(charts_data, f, indent=2, ensure_ascii=False)
+raw = pd.read_excel('Input/rawdata.xlsx', sheet_name=None)
+# 22+ 指标处理函数，产出 Output/*.csv
 ```
 
-### Step 3: HTML 结构生成
-```html
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <title>2026年3月 月度运营数据报告</title>
-    <script src="./assets/chart.umd.min.js"></script>
-    <script src="./assets/chartjs-plugin-datalabels.min.js"></script>
-</head>
-<body>
-    <!-- 侧边栏导航 -->
-    <nav id="sidebar-nav">
-        <div class="nav-section">
-            <a href="#section1" class="nav-l1">一、获客规模指标</a>
-            <a href="#subsection1-1" class="nav-l2">1-7评级首借交易</a>
-        </div>
-    </nav>
+### Step 2: HTML 生成（generate_html.py）
+```python
+from datetime import datetime
+import pandas as pd
+from pathlib import Path
 
-    <!-- 主内容区 -->
-    <main id="main-content">
-        <section id="section1">
-            <h2 contenteditable="true">一、获客规模指标</h2>
-            <div class="conclusion-box" contenteditable="true">
-                <p>2月交易总额4.80亿元，环比下降25.1%。</p>
-            </div>
-            <div class="charts-container">
-                <canvas id="chart1"></canvas>
-            </div>
-        </section>
-    </main>
+def build_html():
+    # 1. 读取所有 CSV
+    trade = pd.read_csv("Output/trade_by_group.csv")
+    # ... 23 个 CSV
 
-    <script src="./data/report-data.js"></script>
-    <script src="./charts.js"></script>
-</body>
-</html>
+    # 2. 单位转换
+    trade_total = to_js_array(trade["总计"] / 1e8, 2)  # 亿
+
+    # 3. 生成结论
+    concl_scale = gen_conclusion_scale(trade, spend)
+
+    # 4. f-string 模板生成 HTML
+    html = f'''<!DOCTYPE html>
+    <html><head>
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    </head><body>
+    <blockquote>{concl_scale}</blockquote>
+    <div id="chart-trade"></div>
+    <script>
+    echarts.init(document.getElementById('chart-trade')).setOption({{
+        xAxis: {{ data: {trade_months} }},
+        series: [{{ data: {trade_total}, type: 'line' }}]
+    }});
+    </script>
+    </body></html>'''
+
+    # 5. 写入带时间戳的文件
+    out = Path("HTML") / datetime.now().strftime("月报报告_%Y%m%d_%H%M.html")
+    out.write_text(html, encoding="utf-8")
 ```
 
-### Step 4: 图表初始化脚本
-```javascript
-// charts.js
-function initAllCharts() {
-    const charts = window.REPORT_DATA.charts;
-
-    // 柱状图
-    new Chart(document.getElementById('chart1'), {
-        type: 'bar',
-        data: {
-            labels: charts.chart1.labels,
-            datasets: charts.chart1.series.map(s => ({
-                label: s.name,
-                data: s.data,
-                backgroundColor: s.color
-            }))
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                datalabels: {
-                    anchor: 'end',
-                    align: 'top',
-                    formatter: (value) => value.toFixed(2)
-                }
-            }
-        }
-    });
-}
-
-document.addEventListener('DOMContentLoaded', initAllCharts);
-```
-
-### Step 5: 数据准确性校验
+### Step 3: 数据准确性校验
 ```bash
-# 对比新旧版数据
-python verify_data.py \
-    --old Data/intermediate/legacy_logs/20260304/*.csv \
-    --new data/report-data.json
-
-# 输出差异报告
-✓ API回流 Feb-26: 0.0008 (一致)
-✗ 1-3过件率 Feb-26: 8.4% (旧版) vs 7.4% (新版) - 偏差1pp
+# 对比 CSV 源数据与 HTML 内嵌数据
+grep "trade_total" output.html  # 检查数值
+# 对比 V01 PPT 数据确保一致
+diff Output/trade_by_group.csv ../V01_PPT/Output/trade_by_group.csv
 ```
 
 ## Critical Lessons Learned
 
-### 问题 1: 资源路径错误
-**症状**：浏览器 404 错误，Chart.js 加载失败
-**根因**：HTML 中使用 `../assets/` 而非 `./assets/`
+### 问题 1: 字段名不统一
+**症状**：`KeyError: 'month'`
+**根因**：`spend_by_channel.csv` 用 `date_month`，其他 CSV 用 `month`
 **修复**：
-```html
-<!-- 错误 -->
-<script src="../assets/chart.umd.min.js"></script>
-
-<!-- 正确 -->
-<script src="./assets/chart.umd.min.js"></script>
+```python
+def get_month_col(df):
+    for c in ["month", "date_month"]:
+        if c in df.columns:
+            return c
+    raise ValueError(f"No month column: {list(df.columns)}")
 ```
 
-### 问题 2: 数据源混用
-**症状**：同一页面图表数据不一致
-**根因**：存在两个数据源（chart-data.json 手动OCR vs report-data.json 程序提取）
+### 问题 2: 微小值精度丢失
+**症状**：抖音 CVR 全显示 0.0
+**根因**：原始值 ~4.45e-5，×100=0.00445，round(2)=0.0
 **修复**：
-```bash
-# 归档错误数据源
-mv chart-data.json chart-data.json.bak
-
-# 统一使用精确数据源
-# charts.js 仅引用 data/report-data.js
+```python
+# 对极小值指标使用更高精度
+dy_cvf_cvr = to_js_array(dy_cv_f["CVR"] * 100, 4)  # 4位小数
 ```
 
-### 问题 3: 图表未初始化
-**症状**：Canvas 元素存在但无图表渲染
-**根因**：charts.js 中仅初始化了 5/27 图表
-**修复**：
-```javascript
-// 为所有 27 个 canvas 创建初始化函数
-function initChart1() { /* ... */ }
-function initChart2() { /* ... */ }
-// ... 共 27 个
+### 问题 3: f-string 中调用不存在的函数
+**症状**：`NameError: conv_overall_js is not defined`
+**根因**：在 f-string 中引用了未定义的函数
+**修复**：在 f-string 之前预计算所有变量
+```python
+# 预计算
+tx_cvo_months_js = months_js(tx_cv_o)
+# 然后在 f-string 中使用 {tx_cvo_months_js}
+```
 
-function initAllCharts() {
-    initChart1();
-    initChart2();
-    // ...
+### 问题 4: 图表顶部被标题遮挡
+**症状**：数据标签被 chart-title 文字框挡住
+**根因**：`grid.top: 20` 太小
+**修复**：全局改为 `grid.top: 45`
+
+### 问题 5: 页面内容偏左不居中
+**症状**：`margin-left: 260px; margin-right: auto` 无法居中
+**根因**：固定左偏移 + auto 右边距只会左对齐
+**修复**：
+```css
+/* 动态居中：宽屏居中，窄屏紧贴侧栏 */
+#main-content {
+    margin-left: max(260px, calc((100vw - 1200px) / 2));
+    max-width: 1200px;
 }
 ```
 
-### 问题 4: contenteditable 保存
-**症状**：编辑后刷新页面内容丢失
-**解决方案**：
-- 方案 A：使用 localStorage 自动保存
-- 方案 B：提示用户手动保存 HTML
-- 方案 C：集成后端 API 持久化
+### 问题 6: 中文乱码（U+FFFD）
+**症状**：`3.4 ��音转化`、`付��商店`
+**根因**：文件编码错误或编辑器截断中文字符
+**修复**：逐一搜索 `��` 并替换为正确中文
 
-本项目采用方案 B（简单可靠）。
-
-## Input Parameters
-
-```yaml
-data_source:
-  type: excel | csv | dataphin
-  path: /path/to/source.xlsx
-  sheet_name: pivot  # Excel 专用
-  table_name: dwd.monthly_metrics  # Dataphin 专用
-
-report_config:
-  title: "2026年3月 月度运营数据报告"
-  period:
-    start: "2026-02-01"
-    end: "2026-02-29"
-  sections:
-    - name: "获客规模指标"
-      subsections:
-        - title: "1-7评级首借交易"
-          charts: [1]
-        - title: "业务花费"
-          charts: [2, 3]
-
-style_theme: ppt  # 或 modern, minimal, dashboard
+### 问题 7: 百分比精度不一致导致结论与图表矛盾
+**症状**：JSON 数据显示环比 +0.1pp，但结论文本写 +0.03pp（3倍差距）；21 个数据点出现 WARN
+**根因**：`_fmt_pct()` 使用"智能精度"（>10% 用1位小数，≤10% 用2位小数），导致 JSON 输出精度低于结论文本精度
+**修复**：
+```python
+# 统一使用2位小数，避免 chart 数据与结论文案精度不一致
+def _fmt_pct(v):
+    return f"{v:.2f}"
 ```
+**泛化规则**：所有百分比/千分比/比率类数据统一使用 2 位小数输出，包括日耗、日请求量、花费等金额类数据也应提升至 2 位小数
 
-## Output Structure
+### 问题 8: JS 选择器与 HTML class 不匹配导致动态结论注入失败
+**症状**：`setConclusions()` 的 `querySelectorAll` 返回空数组，所有动态结论静默失败
+**根因**：charts.js 使用 `.conclusion-content` 选择器，但 HTML 中实际 class 为 `.conclusion-box`
+**修复**：将 JS 选择器从 `.conclusion-content` 改为 `.conclusion-box`
+**泛化规则**：JS/CSS 选择器修改时必须同步检查 HTML 中对应元素的 class/id 是否匹配
 
-```
-output/
-├── index.html              # 主报告文件
-├── charts.js               # 图表渲染脚本
-├── data/
-│   ├── report-data.json    # 图表数据
-│   └── report-data.js      # 浏览器版本
-├── assets/
-│   ├── chart.umd.min.js
-│   └── chartjs-plugin-datalabels.min.js
-├── LAYOUT_CHANGES.md       # 修改日志
-└── VERIFICATION_REPORT.md  # 数据校验报告
-```
-
-## Usage Examples
-
-### Example 1: 从 Excel 生成报告
-```bash
-/monthly-report-html-generator \
-    --source monthly_data.xlsx \
-    --sheet pivot \
-    --output output/report.html
-```
-
-### Example 2: 从 Dataphin 生成报告
-```bash
-/monthly-report-html-generator \
-    --source dataphin:dwd.monthly_metrics \
-    --period 2026-02 \
-    --template ppt
-```
-
-### Example 3: 复刻 PPT 排版
-```bash
-/monthly-report-html-generator \
-    --source data.xlsx \
-    --reference report.pptx \
-    --output-dir monthly_report_v2/
-```
+### 问题 9: 死代码 — JS 引用不存在的 canvas 元素
+**症状**：`renderTradeByChannel()` 和 `renderTradeChange()` 引用 `chart-trade-by-channel` 和 `chart-trade-change`，但 HTML 中无对应 canvas
+**根因**：HTML 重构时移除了 canvas 元素，但 charts.js 未同步清理
+**修复**：从 charts.js 中移除死函数及其在 `initAllCharts` 中的调用
+**泛化规则**：HTML 结构变更后必须 grep 检查 JS 中所有 `getElementById` / `querySelector` 引用是否仍然有效
 
 ## Quality Checklist
 
 生成报告后必须验证：
 
-- [ ] 所有图表正常渲染（无空白 canvas）
-- [ ] 数据与源 Excel/CSV 精确一致
-- [ ] 结论文本语法通顺、数据准确
+- [ ] 脚本执行无报错（`python generate_html.py` 返回 [OK]）
+- [ ] 零乱码字符（grep `��` 返回空）
+- [ ] 所有图表正常渲染（23 个 ECharts 实例）
+- [ ] 数据与源 CSV 精确一致
+- [ ] 14 个结论区域全部填充（无 placeholder 文本）
 - [ ] 侧边栏导航点击跳转正常
-- [ ] contenteditable 功能正常
+- [ ] 侧栏折叠/展开按钮正常
+- [ ] 内容在宽屏居中显示
 - [ ] 响应式布局在小屏正常
 - [ ] 浏览器控制台无 JavaScript 错误
-- [ ] 打印/PDF 导出格式正确
+- [ ] contenteditable 功能正常
+- [ ] 百分比/比率数据统一 2 位小数（`_fmt_pct` 输出与结论文案精度一致）
+- [ ] JS 选择器与 HTML class/id 完全匹配（grep 交叉验证）
+- [ ] 无死代码（JS 中所有 `getElementById`/`querySelector` 引用在 HTML 中存在）
 
-## Advanced Features
+## Output Structure
 
-### 自动结论生成
-```python
-def generate_conclusion(data):
-    """基于数据自动生成结论文本"""
-    current = data['current_month']
-    previous = data['previous_month']
-    change = ((current - previous) / previous) * 100
-
-    if change > 0:
-        trend = f"环比增长{abs(change):.1f}%"
-    else:
-        trend = f"环比下降{abs(change):.1f}%"
-
-    return f"本月总额{current:.2f}亿元，{trend}。"
 ```
-
-### 数据血缘追踪
-```bash
-# 记录数据处理链路
-数据源 → data_processor.py → CSV快照 → report-data.json → charts.js → 浏览器
+V04_HTMl/
+├── generate_html.py           # 单脚本生成器（~1500行）
+├── Input/
+│   └── rawdata.xlsx           # 源数据
+├── Output/
+│   ├── trade_by_group.csv     # 23 个中间 CSV
+│   ├── spend_by_channel.csv
+│   └── ...
+└── HTML/
+    └── 月报报告_{YYYYMMDD}_{HHMM}.html  # 自包含输出
 ```
 
 ## Related Skills
 
+- `/html-report-framework` - HTML 报告通用框架
 - `/dp-explorer` - Dataphin 数据探索
-- `/frontend-design` - 前端界面优化
 - `/document-skills:xlsx` - Excel 数据处理
 
 ## Notes
 
-- **性能优化**：27+ 图表建议使用懒加��（滚动到可见区域再渲染）
-- **数据安全**：敏感数据请勿直接内嵌 HTML，使用后端 API 动态加载
-- **版本控制**：report-data.json 建议纳入 Git 管理，便于追踪数据变化
-- **浏览器兼容**：Chart.js 4.x 不支持 IE11，建议 Chrome 90+ / Firefox 88+
+- **ECharts 5.5.0**：CDN 双源加载，支持所有现代浏览器
+- **文件命名**：自动加时间戳，避免覆盖历史版本
+- **数据安全**：敏感数据内嵌 HTML 后注意分发范围
+- **Windows 终端乱码**：Python print 中文路径在 GBK 终端显示异常，不影响 HTML 输出

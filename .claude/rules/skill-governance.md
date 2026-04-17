@@ -34,13 +34,97 @@
 
 ```
 必查文件：
-✓ skills/<name>/SKILL.md    → 内容完整
-✓ package.json              → skills 数组已注册
+✓ skills/<name>/SKILL.md    → 内容完整且有 YAML frontmatter
+✓ package.json              → skills 数组已注册且版本号正确
 ✓ README.md                 → 对应分类表格已添加
 ✓ CHANGELOG.md              → 变更记录已添加
 ✓ package.json.version      → 版本号已递增
 ✓ 安全检测通过（skill-vetter）→ 新增 skill 且包含执行代码时必须
+✓ 原型 skill 已标记 status  → 核心功能未实现时必须添加 "status": "prototype"
+✓ 文档长度合理              → SKILL.md 控制在 500 行以内
 ```
+
+### SKILL.md 文档规范
+
+**长度限制**（基于质量审查结果）：
+- **推荐长度**：200-400 行（如 guanyuan-data-fetcher: 312 行）
+- **硬性上限**：500 行
+- **超长处理**：如超过 500 行，拆分为：
+  - `SKILL.md` - 核心使用文档（< 500 行）
+  - `ARCHITECTURE.md` - 架构设计详细说明
+  - `ALGORITHM.md` - 算法原理和实现细节
+  - `resources/` - 参考资料和示例
+
+**必需组成部分**：
+1. **YAML frontmatter**（必须，10-15 行）
+   ```yaml
+   ---
+   name: skill-name
+   description: 简短描述（一句话）
+   argument-hint: "命令行参数提示"
+   version: 1.0.0
+   level: 3
+   tags:
+     - tag1
+     - tag2
+   ---
+   ```
+
+2. **核心章节**（按需，总计 < 500 行）
+   - 功能描述（Description）
+   - 使用方法（Usage）
+   - 参数说明（Parameters）
+   - 示例（Examples）
+   - 输出格式（Output）
+   - 故障排除（Troubleshooting）
+
+---
+
+## 质量审查发现的关键问题（2026-04-01）
+
+基于 43 个 skills 的全面审查，以下是必须避免的常见问题：
+
+### 🚨 严重问题（阻止提交）
+
+1. **未注册 Skill**
+   - 问题：目录存在但未在 package.json 中注册
+   - 检查：`node -e "console.log(require('./package.json').claudePlugin.skills.map(s=>s.name))"`
+   - 影响：无法通过命令调用，用户无法发现
+
+2. **缺少 YAML Frontmatter**
+   - 问题：SKILL.md 使用普通 Markdown 标题而非 YAML frontmatter
+   - 检查：文件前 3 行必须是 `---`
+   - 示例：
+     ```yaml
+     ---
+     name: my-skill
+     description: 简短描述
+     version: 1.0.0
+     tags: [tag1, tag2]
+     ---
+     ```
+
+### ⚠️ 警告问题（建议修复）
+
+3. **原型未标注**
+   - 问题：核心功能未实现但未标记为 prototype
+   - 修复：在 package.json 中添加 `"status": "prototype"` 字段
+   - 修复：在 description 前添加 `[PROTOTYPE]` 标记
+
+4. **缺少版本号**
+   - 问题：package.json 注册条目缺少 version 字段
+   - 修复：添加 `"version": "1.0.0"`
+
+### ℹ️ 文档优化建议
+
+5. **文档过长**
+   - 问题：部分 SKILL.md 超过 500 行，难以维护
+   - 标准：推荐 200-400 行，硬性上限 500 行
+   - 超长处理：拆分为 SKILL.md + ARCHITECTURE.md + 资源文件
+
+6. **数据清理不足**
+   - 问题：用户输入未充分验证和清理
+   - 建议：添加明确的输入验证和转义步骤
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "shuhe-work-skills",
-  "version": "1.11.0",
-  "description": "数禾工作场景Skills集合 + oh-my-claudecode 完整工具链",
+  "version": "2.0.0",
+  "description": "数禾DS团队工作场景 Skills 集合",
   "author": "数禾DS团队",
   "license": "MIT",
   "claudePlugin": {
@@ -9,255 +9,6 @@
     "skillsDirectory": "skills",
     "autoDiscoverSkills": true,
     "skills": [
-      {
-        "name": "guanyuan-data-fetcher",
-        "version": "1.0.0",
-        "description": "自动化观远数据平台查询和报告生成 - 支持卡片查询、指标获取、Excel报告生成",
-        "mainPath": "skills/guanyuan-data-fetcher/main.py",
-        "docPath": "skills/guanyuan-data-fetcher/SKILL.md",
-        "command": "/guanyuan-data-fetcher",
-        "dependencies": {
-          "mcp": ["guanyuan-api"],
-          "python": [
-            "openpyxl>=3.0.0",
-            "pandas>=1.3.0",
-            "requests>=2.27.0",
-            "pydantic>=1.9.0"
-          ]
-        },
-        "tags": ["data", "guanyuan", "reporting", "excel", "automation"],
-        "requiresAuth": true,
-        "authType": "guanyuan_api"
-      },
-      {
-        "name": "guanyuan-monitor",
-        "version": "1.0.0",
-        "status": "prototype",
-        "description": "[PROTOTYPE] 自动化观远数据监控系统 - 支持基于规则的告警判断、钉钉通知、定时任务调度",
-        "docPath": "skills/guanyuan-monitor/SKILL.md",
-        "command": "/guanyuan-monitor",
-        "dependencies": {
-          "mcp": ["guanyuan-data", "messagengine-dingtalk"],
-          "python": [
-            "schedule>=1.1.0",
-            "pyyaml>=6.0"
-          ]
-        },
-        "tags": ["monitoring", "guanyuan", "alerts", "automation", "dingtalk"],
-        "requiresAuth": true,
-        "authType": "guanyuan_api"
-      },
-      {
-        "name": "rta-exclude-strategy",
-        "version": "2.1.0",
-        "description": "RTA排除策略分析 - 双算法(贪心+ILP)+多目标优化+Uplift因果推断+PSI稳定性+自动分箱+批量回测",
-        "docPath": "skills/rta-exclude-strategy/SKILL.md",
-        "command": "/rta-exclude-strategy",
-        "dependencies": {
-          "python": [
-            "pandas>=1.3.0",
-            "numpy>=1.20.0",
-            "openpyxl>=3.0.0",
-            "pulp>=2.7.0"
-          ]
-        },
-        "tags": [
-          "rta",
-          "advertising",
-          "model-analysis",
-          "excel",
-          "html",
-          "reporting",
-          "automation",
-          "optimization"
-        ]
-      },
-      {
-        "name": "ai-slop-cleaner",
-        "description": "Clean AI-generated code slop with a regression-safe, deletion-first workflow",
-        "docPath": "skills/ai-slop-cleaner/SKILL.md",
-        "command": "/ai-slop-cleaner"
-      },
-      {
-        "name": "ask",
-        "description": "Process-first advisor routing for Claude, Codex, or Gemini via omc ask",
-        "docPath": "skills/ask/SKILL.md",
-        "command": "/ask"
-      },
-      {
-        "name": "autopilot",
-        "description": "Full autonomous execution from idea to working code",
-        "docPath": "skills/autopilot/SKILL.md",
-        "command": "/autopilot"
-      },
-      {
-        "name": "cancel",
-        "description": "Cancel any active OMC mode",
-        "docPath": "skills/cancel/SKILL.md",
-        "command": "/cancel"
-      },
-      {
-        "name": "ccg",
-        "description": "Claude-Codex-Gemini tri-model orchestration",
-        "docPath": "skills/ccg/SKILL.md",
-        "command": "/ccg"
-      },
-      {
-        "name": "configure-notifications",
-        "description": "Configure notification integrations (Telegram, Discord, Slack)",
-        "docPath": "skills/configure-notifications/SKILL.md",
-        "command": "/configure-notifications"
-      },
-      {
-        "name": "deep-dive",
-        "description": "2-stage pipeline: trace + deep-interview for requirements crystallization",
-        "docPath": "skills/deep-dive/SKILL.md",
-        "command": "/deep-dive"
-      },
-      {
-        "name": "deepinit",
-        "description": "Deep codebase initialization with hierarchical AGENTS.md documentation",
-        "docPath": "skills/deepinit/SKILL.md",
-        "command": "/deepinit"
-      },
-      {
-        "name": "deep-interview",
-        "description": "Socratic deep interview with mathematical ambiguity gating",
-        "docPath": "skills/deep-interview/SKILL.md",
-        "command": "/deep-interview"
-      },
-      {
-        "name": "external-context",
-        "description": "Invoke parallel document-specialist agents for external searches",
-        "docPath": "skills/external-context/SKILL.md",
-        "command": "/external-context"
-      },
-      {
-        "name": "hud",
-        "description": "Configure HUD display options",
-        "docPath": "skills/hud/SKILL.md",
-        "command": "/hud"
-      },
-      {
-        "name": "learner",
-        "description": "Extract a learned skill from the current conversation",
-        "docPath": "skills/learner/SKILL.md",
-        "command": "/learner"
-      },
-      {
-        "name": "mcp-setup",
-        "description": "Configure popular MCP servers for enhanced agent capabilities",
-        "docPath": "skills/mcp-setup/SKILL.md",
-        "command": "/mcp-setup"
-      },
-      {
-        "name": "omc-doctor",
-        "description": "Diagnose and fix oh-my-claudecode installation issues",
-        "docPath": "skills/omc-doctor/SKILL.md",
-        "command": "/omc-doctor"
-      },
-      {
-        "name": "omc-reference",
-        "description": "OMC agent catalog, tools, team pipeline routing, and skills registry",
-        "docPath": "skills/omc-reference/SKILL.md",
-        "command": "/omc-reference"
-      },
-      {
-        "name": "omc-setup",
-        "description": "Install or refresh oh-my-claudecode",
-        "docPath": "skills/omc-setup/SKILL.md",
-        "command": "/omc-setup"
-      },
-      {
-        "name": "omc-teams",
-        "description": "CLI-team runtime for claude, codex, or gemini workers in tmux panes",
-        "docPath": "skills/omc-teams/SKILL.md",
-        "command": "/omc-teams"
-      },
-      {
-        "name": "plan",
-        "description": "Strategic planning with optional interview workflow",
-        "docPath": "skills/plan/SKILL.md",
-        "command": "/plan"
-      },
-      {
-        "name": "project-session-manager",
-        "description": "Worktree-first dev environment manager for issues, PRs, and features",
-        "docPath": "skills/project-session-manager/SKILL.md",
-        "command": "/project-session-manager"
-      },
-      {
-        "name": "ralph",
-        "description": "Self-referential loop until task completion with configurable verification",
-        "docPath": "skills/ralph/SKILL.md",
-        "command": "/ralph"
-      },
-      {
-        "name": "ralplan",
-        "description": "Consensus planning entrypoint that auto-gates vague requests",
-        "docPath": "skills/ralplan/SKILL.md",
-        "command": "/ralplan"
-      },
-      {
-        "name": "release",
-        "description": "Automated release workflow for oh-my-claudecode",
-        "docPath": "skills/release/SKILL.md",
-        "command": "/release"
-      },
-      {
-        "name": "sciomc",
-        "description": "Orchestrate parallel scientist agents for comprehensive analysis",
-        "docPath": "skills/sciomc/SKILL.md",
-        "command": "/sciomc"
-      },
-      {
-        "name": "setup",
-        "description": "Install/update routing - sends setup, doctor, or MCP requests to correct flow",
-        "docPath": "skills/setup/SKILL.md",
-        "command": "/setup"
-      },
-      {
-        "name": "skill",
-        "description": "Manage local skills - list, add, remove, search, edit, setup wizard",
-        "docPath": "skills/skill/SKILL.md",
-        "command": "/skill"
-      },
-      {
-        "name": "team",
-        "description": "N coordinated agents on shared task list using Claude Code native teams",
-        "docPath": "skills/team/SKILL.md",
-        "command": "/team"
-      },
-      {
-        "name": "trace",
-        "description": "Evidence-driven tracing lane with competing tracer hypotheses",
-        "docPath": "skills/trace/SKILL.md",
-        "command": "/trace"
-      },
-      {
-        "name": "ultraqa",
-        "description": "QA cycling workflow - test, verify, fix, repeat until goal met",
-        "docPath": "skills/ultraqa/SKILL.md",
-        "command": "/ultraqa"
-      },
-      {
-        "name": "ultrawork",
-        "description": "Parallel execution engine for high-throughput task completion",
-        "docPath": "skills/ultrawork/SKILL.md",
-        "command": "/ultrawork"
-      },
-      {
-        "name": "visual-verdict",
-        "description": "Structured visual QA verdict for screenshot-to-reference comparisons",
-        "docPath": "skills/visual-verdict/SKILL.md",
-        "command": "/visual-verdict"
-      },
-      {
-        "name": "writer-memory",
-        "description": "Agentic memory system for writers - track characters, relationships, scenes",
-        "docPath": "skills/writer-memory/SKILL.md",
-        "command": "/writer-memory"
-      },
       {
         "name": "sql-optimizer",
         "version": "1.0.0",
@@ -278,64 +29,15 @@
         "tags": ["sql", "dataphin", "execution", "automation"]
       },
       {
-        "name": "skill-governance",
-        "version": "1.0.0",
-        "description": "Skills 库治理规范 - 新增、更新、删除 skill 的强制性守门流程",
-        "docPath": "skills/skill-governance/SKILL.md",
-        "command": "/skill-governance",
-        "tags": ["governance", "standards", "workflow", "quality"]
-      },
-      {
-        "name": "claude-dir-governance",
-        "version": "1.0.0",
-        "description": ".claude 目录配置治理和性能优化规范",
-        "docPath": "skills/claude-dir-governance/SKILL.md",
-        "command": "/claude-dir-governance",
-        "tags": ["governance", "configuration", "performance", "claude-code"]
-      },
-      {
-        "name": "skill-lifecycle-manager",
-        "version": "1.0.0",
-        "description": "Skills 生命周期管理器 - 版本管理、依赖检查、使用统计、健康报告",
-        "docPath": "skills/skill-lifecycle-manager/SKILL.md",
-        "command": "/skill-lifecycle-manager",
+        "name": "sql-validate-and-export",
+        "version": "2.0.0",
+        "description": "SQL 分段验证、自我修复、结果导出与智能可视化",
+        "docPath": "skills/sql-validate-and-export/SKILL.md",
+        "command": "/sql-validate-and-export",
         "dependencies": {
-          "python": [
-            "click>=8.0.0",
-            "pyyaml>=6.0"
-          ]
+          "mcp": ["sh_dp_mcp"]
         },
-        "tags": ["lifecycle", "version-management", "dependency", "monitoring"]
-      },
-      {
-        "name": "skill-auto-evolver",
-        "version": "1.0.0",
-        "description": "Skills 自动进化器 - 性能监控、自动优化、A/B测试、版本迭代",
-        "docPath": "skills/skill-auto-evolver/SKILL.md",
-        "command": "/skill-auto-evolver",
-        "dependencies": {
-          "python": [
-            "click>=8.0.0",
-            "pyyaml>=6.0"
-          ]
-        },
-        "tags": ["auto-evolution", "optimization", "ab-testing", "performance"]
-      },
-      {
-        "name": "self-improving-agent",
-        "version": "1.0.0",
-        "description": "A universal self-improving agent that learns from ALL skill experiences. Uses multi-memory architecture to continuously evolve the codebase.",
-        "docPath": "skills/self-improving-agent/SKILL.md",
-        "command": "/self-improving-agent",
-        "tags": ["self-improvement", "learning", "memory", "evolution", "automation"]
-      },
-      {
-        "name": "skill-vetter",
-        "version": "1.0.0",
-        "description": "Security-first vetting for OpenClaw skills. Checks for red flags, permission scope, and suspicious patterns before installation.",
-        "docPath": "skills/skill-vetter/SKILL.md",
-        "command": "/skill-vetter",
-        "tags": ["security", "vetting", "audit", "safety", "governance"]
+        "tags": ["sql", "dataphin", "validation", "export", "visualization"]
       },
       {
         "name": "notebook-standardizer",
@@ -356,10 +58,66 @@
       {
         "name": "html-report-framework",
         "version": "3.1.0",
-        "description": "HTML 报告生成通用框架 - CSS 变量设计系统、专业组件库、ECharts 图表、Mermaid 流程图、动态居中布局、可折叠侧栏、规则驱动结论",
+        "description": "HTML 报告生成通用框架 - CSS 变量设计系统、专业组件库、ECharts 图表、Mermaid 流程图",
         "docPath": "skills/html-report-framework/SKILL.md",
         "command": "/html-report-framework",
         "tags": ["html", "reporting", "echarts", "visualization", "data-tool"]
+      },
+      {
+        "name": "monthly-report-html-generator",
+        "version": "1.0.0",
+        "description": "月度报告 HTML 生成器",
+        "docPath": "skills/monthly-report-html-generator/SKILL.md",
+        "command": "/monthly-report-html-generator",
+        "tags": ["html", "reporting", "monthly", "data-tool"]
+      },
+      {
+        "name": "self-improving-agent",
+        "version": "1.0.0",
+        "description": "通用自改进 Agent - 多记忆架构持续进化代码库",
+        "docPath": "skills/self-improving-agent/SKILL.md",
+        "command": "/self-improving-agent",
+        "tags": ["self-improvement", "learning", "memory", "evolution", "automation"]
+      },
+      {
+        "name": "skill-governance",
+        "version": "1.0.0",
+        "description": "Skills 库治理规范 - 新增、更新、删除 skill 的强制性守门流程",
+        "docPath": "skills/skill-governance/SKILL.md",
+        "command": "/skill-governance",
+        "tags": ["governance", "standards", "workflow", "quality"]
+      },
+      {
+        "name": "skill-lifecycle-manager",
+        "version": "1.0.0",
+        "description": "Skills 生命周期管理器 - 版本管理、依赖检查、使用统计、健康报告",
+        "docPath": "skills/skill-lifecycle-manager/SKILL.md",
+        "command": "/skill-lifecycle-manager",
+        "tags": ["lifecycle", "version-management", "dependency", "monitoring"]
+      },
+      {
+        "name": "skill-auto-evolver",
+        "version": "1.0.0",
+        "description": "Skills 自动进化器 - 性能监控、自动优化、A/B测试、版本迭代",
+        "docPath": "skills/skill-auto-evolver/SKILL.md",
+        "command": "/skill-auto-evolver",
+        "tags": ["auto-evolution", "optimization", "ab-testing", "performance"]
+      },
+      {
+        "name": "skill-vetter",
+        "version": "1.0.0",
+        "description": "Skill 安全检测 - 红旗检测、权限范围、可疑模式扫描",
+        "docPath": "skills/skill-vetter/SKILL.md",
+        "command": "/skill-vetter",
+        "tags": ["security", "vetting", "audit", "safety", "governance"]
+      },
+      {
+        "name": "claude-dir-governance",
+        "version": "1.0.0",
+        "description": ".claude 目录配置治理和性能优化规范",
+        "docPath": "skills/claude-dir-governance/SKILL.md",
+        "command": "/claude-dir-governance",
+        "tags": ["governance", "configuration", "performance", "claude-code"]
       }
     ]
   },
@@ -367,12 +125,8 @@
     "claude-code",
     "skills",
     "data-analysis",
-    "guanyuan",
     "dataphin",
     "automation",
-    "oh-my-claudecode",
-    "omc",
-    "workflow",
-    "agents"
+    "workflow"
   ]
 }

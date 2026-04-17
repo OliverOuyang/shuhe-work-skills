@@ -98,82 +98,104 @@ skills/<skill-name>/
 
 #### 模板 A：数禾定制 / 数据工具 Skill（有执行逻辑）
 
+**文档长度要求**：200-400 行（推荐），硬性上限 500 行
+
 ```markdown
+---
+name: skill-name
+description: 简短描述（一句话，包含关键词）
+argument-hint: "命令行参数提示"
+version: 1.0.0
+level: 3
+tags:
+  - category1
+  - category2
+---
+
 # <Skill 名称>
 
-## 1. 概述
-一句话描述 skill 的目的和核心价值。
+简短描述（1-2 句话）
 
-## 2. 功能说明
-### 核心功能
-- 功能 1
-- 功能 2
+## Description
 
-### 支持的场景
-- 场景 1
-- 场景 2
+详细功能说明（2-3 段，控制在 100 字内）
 
-### 限制和约束
-- 限制 1
-- 限制 2
+## Usage
 
-## 3. 调用方式
-### 命令格式
-/<skill-name> [参数] [选项]
+```bash
+/skill-name --param1 value1 [--option1 value2]
+```
 
-### 必需参数
+## Parameters
+
+### Required
 | 参数 | 类型 | 说明 | 示例 |
 |------|------|------|------|
 | param1 | string | 说明 | "value" |
 
-### 可选参数
+### Optional
 | 参数 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
 | --option1 | string | "default" | 说明 |
 
-## 4. 输出格式
-### 成功输出
-（描述输出结构和示例）
+## Examples
 
-### 错误输出
-（描述错误码和错误信息格式）
-
-## 5. 使用示例
 ### 基础用法
-（具体命令示例）
-
-### 高级用法
-（带多参数的完整示例）
-
-## 6. 依赖
-### MCP 工具
-- 工具名称：用途说明
-
-### Python 包
-- package>=version：用途说明
-
-## 7. 错误处理
-### 常见错误场景
-- 场景 1：原因和解决方案
-- 场景 2：原因和解决方案
-
-## 8. 版本历史
-### v1.0.0 (YYYY-MM-DD)
-- 初始版本
+```bash
+/skill-name --param1 "example"
 ```
 
+### 高级用法
+```bash
+/skill-name --param1 "example" --option1 "custom"
+```
+
+## Output
+
+成功输出格式说明（简洁描述）
+
+## Dependencies
+
+### MCP Tools
+- tool-name: 用途
+
+### Python Packages
+- package>=version: 用途
+
+## Troubleshooting
+
+| 问题 | 原因 | 解决方案 |
+|------|------|---------|
+| 错误 1 | 原因 | 方案 |
+
+## Version History
+
+- 1.0.0 (YYYY-MM-DD): 初始版本
+```
+
+**如果文档超过 500 行**，拆分为：
+- `SKILL.md` - 核心使用文档（< 500 行）
+- `ARCHITECTURE.md` - 架构设计
+- `resources/` - 算法说明和参考资料
+
 #### 模板 B：工作流 / 规范类 Skill（纯文档，无执行逻辑）
+
+**文档长度要求**：150-300 行（推荐），硬性上限 400 行
 
 ```markdown
 ---
 name: skill-name
 description: 简短描述，包含触发关键词
+level: 3
+tags:
+  - workflow
+  - governance
 ---
 
 # Skill 名称
 
 ## Purpose
-这个 skill 的目的和解决的问题。
+简短说明目的（2-3 句话）
 
 ## When to Use
 - 触发条件 1
@@ -181,25 +203,29 @@ description: 简短描述，包含触发关键词
 
 ## Workflow
 ### Step 1: 步骤名称
-详细说明
+简洁说明（避免冗长段落）
 
 ### Step 2: 步骤名称
-详细说明
+简洁说明
 
 ## Guidelines
-关键规则和约束。
-
-## Examples
-### Good
-正确使用示例
-
-### Bad
-错误使用示例及原因
+- 规则 1（一行一条）
+- 规则 2
 
 ## Checklist
 - [ ] 检查项 1
 - [ ] 检查项 2
+
+## Examples
+**Good**: 正确示例（代码块）
+**Bad**: 错误示例及原因（简短说明）
 ```
+
+**文档精简原则**：
+- 用表格代替长段落
+- 用清单代替详细说明
+- 示例控制在 10 行以内
+- 避免重复内容
 
 ### 2.3 命名规范校验
 
@@ -223,6 +249,69 @@ description: 简短描述，包含触发关键词
 - [ ] package.json 中是否已移除注册
 - [ ] README.md 中是否已移除条目
 - [ ] CHANGELOG.md 中是否记录了删除原因
+
+---
+
+## 阶段 3：注册与一致性校验
+
+### 3.1 package.json 注册（新增时）
+
+在 `package.json` 的 `claudePlugin.skills` 数组中添加条目。
+
+**必需字段**：
+```json
+{
+  "name": "skill-name",
+  "version": "1.0.0",
+  "description": "简短描述",
+  "docPath": "skills/skill-name/SKILL.md",
+  "command": "/skill-name",
+  "tags": ["tag1", "tag2"]
+}
+```
+
+**可选字段**：
+```json
+{
+  "status": "prototype",          // 原型状态（核心功能未实现时必须）
+  "mainPath": "skills/skill-name/main.py",
+  "dependencies": {
+    "mcp": ["tool-name"],
+    "python": ["package>=version"]
+  }
+}
+```
+
+**关键检查**（基于质量审查发现）：
+- ✅ YAML frontmatter 存在（SKILL.md 前 3 行是 `---`）
+- ✅ 版本号存在（不能缺少 `version` 字段）
+- ✅ 原型已标记（核心功能未实现时添加 `"status": "prototype"` 并在 description 前加 `[PROTOTYPE]`）
+- ✅ 命令名一致（package.json 的 `command` 与目录名、YAML 的 `name` 一致）
+
+### 3.2 一致性校验命令
+
+**验证 JSON 语法**：
+```bash
+node -e "require('./package.json'); console.log('✓ JSON valid')"
+```
+
+**验证所有 skills 已注册**：
+```bash
+node -e "
+const pkg = require('./package.json');
+const fs = require('fs');
+const registered = new Set(pkg.claudePlugin.skills.map(s => s.name));
+const dirs = fs.readdirSync('skills', {withFileTypes: true})
+  .filter(d => d.isDirectory() && d.name !== 'AGENTS.md')
+  .map(d => d.name);
+const unregistered = dirs.filter(d => !registered.has(d));
+if (unregistered.length > 0) {
+  console.log('❌ 未注册:', unregistered.join(', '));
+} else {
+  console.log('✓ 所有 skills 已注册');
+}
+"
+```
 
 ---
 
